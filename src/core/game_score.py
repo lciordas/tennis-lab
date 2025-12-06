@@ -2,39 +2,34 @@
 
 from typing import Literal, Optional
 
-
 class GameScore:
     """
     Represents the running score of a tennis game.
 
-    Attributes & Properties:
-    -------------------------
+    Attributes:
+    -----------
     isBlank: bool
         Whether the current score is 0-0.
     isDeuce: bool
         Whether the current score is 'deuce'.
+    isFinal: bool
+        Whether this is a final score (game decided).
+    winner: Optional[Literal[1, 2]]
+        Returns which player won the game, None if score is not final.
     playerWithAdvantage: Optional[Literal[1, 2]]
         Returns which player has 'advantage', None if n/a.
-    winner: Optional[Literal[1, 2]]
-        Returns which player won the game, None if game is not over.
 
     Methods:
     --------
-    __init__(pointsP1: int, pointsP2: int)
+    __init__(pointsP1: int, pointsP2: int, noAdRule: bool = False, normalize: bool = False)
         Initialize the score to an arbitrary (but valid) initial value.
-    isOver(noAdRule: bool) -> bool:
-        Returns whether the game is over.
-    playerWon(player: Literal[1, 2], noAdRule: bool) -> bool:
-        Returns whether a given player won the game given the current score.
-    normalize():
-        Represent all deuces as 3-3 and all adds as 3-4 or 4-3.
-    updateOnPointOver(pointWinner: Literal[1, 2])
+    recordPoint(pointWinner: Literal[1, 2])
         Update the score with the result of the next point.
     asPoints(pov: Literal[1,2]) -> tuple[int, int]
         Get the current score, as a tuple of two integers.
     asTraditional(pov: Literal[1,2]) -> str
         Get the current score, expressed in the traditional tennis convention of 0, 15, 30, 40.
-    nextScores(noAddRule: bool) -> Optional[tuple["GameScore", "GameScore"]]
+    nextScores() -> Optional[tuple["GameScore", "GameScore"]]
         Calculates two scores, the outcome of either player winning the next point.
     __eq__(other: "GameScore") -> bool
         Implemented the equality operation.
@@ -44,17 +39,21 @@ class GameScore:
         Returns the traditional score format for display.
     """
 
-    def __init__(self, pointsP1: int, pointsP2: int):
+    def __init__(self, pointsP1: int, pointsP2: int, noAdRule: bool = False, normalize: bool = False):
         """
         Initialize the score to an arbitrary (but valid) initial value.
+
         The score is represented as two integers, the number of points won by each
         player, and not by the more traditional tennis convention of 0, 15, 30, 40.
         Example: the score 30-15 is represented as 2,1.
 
         Parameters:
         -----------
-        pointsP1 - initial number of points for Player1
-        pointsP2 - initial number of points for Player2
+        pointsP1  - initial number of points for Player1
+        pointsP2  - initial number of points for Player2
+        noAdRule  - if True, the game is played under the no-ad rule (default: False)
+        normalize - if True, automatically normalize the score after initialization
+                    and after each point update (default: False)
 
         Raises:
         -------
@@ -63,9 +62,14 @@ class GameScore:
         if not GameScore._isValidScore((pointsP1, pointsP2)):
             raise ValueError(f"Invalid initial score: {(pointsP1, pointsP2)}")
 
-        # keep track of the current score
-        self._currPointsP1: int = pointsP1
-        self._currPointsP2: int = pointsP2
+        # keep track of the current score as number of points
+        self._currPointsP1: int  = pointsP1
+        self._currPointsP2: int  = pointsP2
+        self._noAdRule    : bool = noAdRule
+        self._normalize   : bool = normalize
+
+        if self._normalize:
+            self._normalize_score()
 
     @property
     def isBlank(self) -> bool:
@@ -78,14 +82,18 @@ class GameScore:
     def isDeuce(self) -> bool:
         """
         Returns whether the current score is 'deuce'.
+
+        Deuce is defined as both players having the same number of points (more than two).
+        For example 30-30 is not deuce.
         """
         return (self._currPointsP1 == self._currPointsP2) and (self._currPointsP1 >= 3)
 
-    def isOver(self, noAdRule: bool) -> bool:
+    @property
+    def isFinal(self) -> bool:
         """
-        Returns whether the game is over.
+        Returns whether this is a final score (game decided).
         """
-        return self.playerWon(1, noAdRule) or self.playerWon(2, noAdRule)
+        return self._playerWon(1) or self._playerWon(2)
 
     @property
     def playerWithAdvantage(self) -> Optional[Literal[1, 2]]:
@@ -101,61 +109,15 @@ class GameScore:
     @property
     def winner(self) -> Optional[Literal[1, 2]]:
         """
-        Returns which player won the game, None if game is not over.
-        Uses standard advantage rules (not no-ad).
+        Returns which player won the game, None if score is not final.
         """
-        if self.playerWon(1, noAdRule=False):
+        if self._playerWon(1):
             return 1
-        if self.playerWon(2, noAdRule=False):
+        if self._playerWon(2):
             return 2
         return None
 
-    def playerWon(self, player: Literal[1, 2], noAdRule: bool) -> bool:
-        """
-        Returns whether a given player won the game, considering the current score.
-
-        Parameters:
-        -----------
-        player   - the player for whom we are carrying out the test
-        noAdRule - if True, the game is played under the no-ad rule
-
-        Returns:
-        --------
-        Whether the given player won the game given the current score.
-
-        Raises:
-        -------
-        ValueError - if player is not 1 or 2
-        """
-        if player not in (1, 2):
-            raise ValueError(f"Invalid player: {player}. Must be 1 or 2.")
-
-        if noAdRule:
-            P1_won = (self._currPointsP1 == 4)
-            P2_won = (self._currPointsP2 == 4)
-        else:
-            P1_won = (self._currPointsP1 >= 4) and (self._currPointsP1 - self._currPointsP2 > 1)
-            P2_won = (self._currPointsP2 >= 4) and (self._currPointsP2 - self._currPointsP1 > 1)
-
-        return P1_won if player == 1 else P2_won
-
-    def normalize(self):
-        """
-        Normalizing the score means representing all deuces as 3-3,
-        and all adds as 3-4 or 4-3. Without normalization, if there
-        are multiple deuces, the score grows unbounded, which can be
-        problematic for some applications.
-        """
-        if self.isDeuce:
-            self._currPointsP1 = self._currPointsP2 = 3
-        elif self.playerWithAdvantage == 1:
-            self._currPointsP1 = 4
-            self._currPointsP2 = 3
-        elif self.playerWithAdvantage == 2:
-            self._currPointsP1 = 3
-            self._currPointsP2 = 4
-
-    def updateOnPointOver(self, pointWinner: Literal[1, 2]):
+    def recordPoint(self, pointWinner: Literal[1, 2]):
         """
         Update the score with the result of the next point.
 
@@ -171,6 +133,9 @@ class GameScore:
             raise ValueError(f"Invalid pointWinner: {pointWinner}. Must be 1 or 2.")
         self._currPointsP1 += (1 if pointWinner == 1 else 0)
         self._currPointsP2 += (1 if pointWinner == 2 else 0)
+
+        if self._normalize:
+            self._normalize_score()
 
     def asPoints(self, pov: Literal[1, 2]) -> tuple[int, int]:
         """
@@ -226,30 +191,54 @@ class GameScore:
             raise ValueError(f"Invalid pov: {pov}. Must be 1 or 2.")
         return GameScore._convertScore(self.asPoints(pov))
 
-    def nextScores(self, noAdRule: bool) -> Optional[tuple["GameScore", "GameScore"]]:
+    def nextScores(self) -> Optional[tuple["GameScore", "GameScore"]]:
         """
         Calculates two scores, the outcome of either player winning
         the next point from the current score. This is possible only
-        if the game is not already over.
-
-        Parameters:
-        -----------
-        noAddRule - if True, the game is played under the no-ad rule
+        if the score is not already final.
 
         Returns:
         --------
         A tuple of two GameScore instances, the first representing the
         score if Player1 wins the next point, the second representing
         the score if Player2 wins the next point.
-        If the game is already over, returns None.
+        If the score is already final, returns None.
         """
-
-        game_over = self.playerWon(1, noAdRule) or self.playerWon(2, noAdRule)
-        if game_over:
+        if self.isFinal:
             return None
 
-        return GameScore(self._currPointsP1+1, self._currPointsP2), \
-               GameScore(self._currPointsP1, self._currPointsP2+1)
+        return GameScore(self._currPointsP1+1, self._currPointsP2, self._noAdRule, self._normalize), \
+               GameScore(self._currPointsP1, self._currPointsP2+1, self._noAdRule, self._normalize)
+
+    def _playerWon(self, player: Literal[1, 2]) -> bool:
+        """
+        Tests whether a given player won the game, considering the current score.
+        """
+
+        if self._noAdRule:
+            P1_won = (self._currPointsP1 == 4) and (self._currPointsP2 < 4)
+            P2_won = (self._currPointsP2 == 4) and (self._currPointsP1 < 4)
+        else:
+            P1_won = (self._currPointsP1 >= 4) and (self._currPointsP1 - self._currPointsP2 > 1)
+            P2_won = (self._currPointsP2 >= 4) and (self._currPointsP2 - self._currPointsP1 > 1)
+
+        return P1_won if player == 1 else P2_won
+
+    def _normalize_score(self):
+        """
+        Normalizing the score means representing all deuces as 3-3,
+        and all adds as 3-4 or 4-3. Without normalization, if there
+        are multiple deuces, the score grows unbounded, which can be
+        problematic for some applications.
+        """
+        if self.isDeuce:
+            self._currPointsP1 = self._currPointsP2 = 3
+        elif self.playerWithAdvantage == 1:
+            self._currPointsP1 = 4
+            self._currPointsP2 = 3
+        elif self.playerWithAdvantage == 2:
+            self._currPointsP1 = 3
+            self._currPointsP2 = 4
 
     @staticmethod
     def _isValidScore(score: tuple[int, int]) -> bool:
@@ -323,13 +312,14 @@ class GameScore:
         if not isinstance(other, GameScore):
             return NotImplemented
         return (self._currPointsP1 == other._currPointsP1) and \
-               (self._currPointsP2 == other._currPointsP2)
+               (self._currPointsP2 == other._currPointsP2) and \
+               (self._noAdRule == other._noAdRule)
 
     def __repr__(self) -> str:
         """
         Valid Python expression that can be used to recreate this GameScore instance.
         """
-        return f"GameScore(pointsP1={self._currPointsP1}, pointsP2={self._currPointsP2})"
+        return f"GameScore(pointsP1={self._currPointsP1}, pointsP2={self._currPointsP2}, noAdRule={self._noAdRule}, normalize={self._normalize})"
 
     def __str__(self) -> str:
         """
@@ -338,4 +328,4 @@ class GameScore:
         return self.asTraditional(pov=1)
 
     def __hash__(self) -> int:
-        return hash((self._currPointsP1, self._currPointsP2))
+        return hash((self._currPointsP1, self._currPointsP2, self._noAdRule))
