@@ -1,10 +1,16 @@
 """GameScore class representing the score in a tennis game."""
 
 from typing import Literal, Optional
+from src.core.match_format import MatchFormat
 
 class GameScore:
     """
     Represents the running score of a tennis game.
+
+    Class Constants:
+    ----------------
+    NUM_POINTS_WIN: int
+        Number of points needed to win a game.
 
     Attributes:
     -----------
@@ -21,7 +27,7 @@ class GameScore:
 
     Methods:
     --------
-    __init__(pointsP1: int, pointsP2: int, noAdRule: bool = False, normalize: bool = False)
+    __init__(pointsP1: int, pointsP2: int, matchFormat: MatchFormat)
         Initialize the score to an arbitrary (but valid) initial value.
     recordPoint(pointWinner: Literal[1, 2])
         Update the score with the result of the next point.
@@ -39,21 +45,25 @@ class GameScore:
         Returns the traditional score format for display.
     """
 
-    def __init__(self, pointsP1: int, pointsP2: int, noAdRule: bool = False, normalize: bool = False):
+    # Number of points needed to win a game
+    NUM_POINTS_WIN = 4
+
+    def __init__(self,
+                 pointsP1   : int,
+                 pointsP2   : int,
+                 matchFormat: MatchFormat):
         """
         Initialize the score to an arbitrary (but valid) initial value.
 
         The score is represented as two integers, the number of points won by each
         player, and not by the more traditional tennis convention of 0, 15, 30, 40.
-        Example: the score 30-15 is represented as 2,1.
+        Example: the score 30-15 is represented as (2,1).
 
         Parameters:
         -----------
-        pointsP1  - initial number of points for Player1
-        pointsP2  - initial number of points for Player2
-        noAdRule  - if True, the game is played under the no-ad rule (default: False)
-        normalize - if True, automatically normalize the score after initialization
-                    and after each point update (default: False)
+        pointsP1    - initial number of points for Player1
+        pointsP2    - initial number of points for Player2
+        matchFormat - describes the match format (example: whether using 'no ad' rule)
 
         Raises:
         -------
@@ -63,13 +73,14 @@ class GameScore:
             raise ValueError(f"Invalid initial score: {(pointsP1, pointsP2)}")
 
         # keep track of the current score as number of points
-        self._currPointsP1: int  = pointsP1
-        self._currPointsP2: int  = pointsP2
-        self._noAdRule    : bool = noAdRule
-        self._normalize   : bool = normalize
+        self._currPointsP1: int           = pointsP1
+        self._currPointsP2: int           = pointsP2
+        self._matchFormat : "MatchFormat" = matchFormat
+        self._noAdRule    : bool          = matchFormat.noAdRule
+        self._capPoints   : bool          = matchFormat.capPoints
 
-        if self._normalize:
-            self._normalize_score()
+        if self._capPoints:
+            self._cap_score()
 
     @property
     def isBlank(self) -> bool:
@@ -86,7 +97,7 @@ class GameScore:
         Deuce is defined as both players having the same number of points (more than two).
         For example 30-30 is not deuce.
         """
-        return (self._currPointsP1 == self._currPointsP2) and (self._currPointsP1 >= 3)
+        return (self._currPointsP1 == self._currPointsP2) and (self._currPointsP1 >= GameScore.NUM_POINTS_WIN - 1)
 
     @property
     def isFinal(self) -> bool:
@@ -100,9 +111,9 @@ class GameScore:
         """
         Returns which player has 'advantage', None if n/a.
         """
-        if (self._currPointsP1 - self._currPointsP2 == 1) and (self._currPointsP1 >= 4):
+        if (self._currPointsP1 - self._currPointsP2 == 1) and (self._currPointsP1 >= GameScore.NUM_POINTS_WIN):
             return 1
-        if (self._currPointsP2 - self._currPointsP1 == 1) and (self._currPointsP2 >= 4):
+        if (self._currPointsP2 - self._currPointsP1 == 1) and (self._currPointsP2 >= GameScore.NUM_POINTS_WIN):
             return 2
         return None
 
@@ -137,8 +148,8 @@ class GameScore:
         self._currPointsP1 += (1 if pointWinner == 1 else 0)
         self._currPointsP2 += (1 if pointWinner == 2 else 0)
 
-        if self._normalize:
-            self._normalize_score()
+        if self._capPoints:
+            self._cap_score()
 
     def asPoints(self, pov: Literal[1, 2]) -> tuple[int, int]:
         """
@@ -210,24 +221,23 @@ class GameScore:
         if self.isFinal:
             return None
 
-        return GameScore(self._currPointsP1+1, self._currPointsP2, self._noAdRule, self._normalize), \
-               GameScore(self._currPointsP1, self._currPointsP2+1, self._noAdRule, self._normalize)
+        return GameScore(self._currPointsP1+1, self._currPointsP2  , self._matchFormat), \
+               GameScore(self._currPointsP1  , self._currPointsP2+1, self._matchFormat)
 
     def _playerWon(self, player: Literal[1, 2]) -> bool:
         """
         Tests whether a given player won the game, considering the current score.
         """
-
         if self._noAdRule:
-            P1_won = (self._currPointsP1 == 4) and (self._currPointsP2 < 4)
-            P2_won = (self._currPointsP2 == 4) and (self._currPointsP1 < 4)
+            P1_won = (self._currPointsP1 == GameScore.NUM_POINTS_WIN) and (self._currPointsP2 < GameScore.NUM_POINTS_WIN)
+            P2_won = (self._currPointsP2 == GameScore.NUM_POINTS_WIN) and (self._currPointsP1 < GameScore.NUM_POINTS_WIN)
         else:
-            P1_won = (self._currPointsP1 >= 4) and (self._currPointsP1 - self._currPointsP2 > 1)
-            P2_won = (self._currPointsP2 >= 4) and (self._currPointsP2 - self._currPointsP1 > 1)
+            P1_won = (self._currPointsP1 >= GameScore.NUM_POINTS_WIN) and (self._currPointsP1 - self._currPointsP2 > 1)
+            P2_won = (self._currPointsP2 >= GameScore.NUM_POINTS_WIN) and (self._currPointsP2 - self._currPointsP1 > 1)
 
         return P1_won if player == 1 else P2_won
 
-    def _normalize_score(self):
+    def _cap_score(self):
         """
         Normalizing the score means representing all deuces as 3-3,
         and all adds as 3-4 or 4-3. Without normalization, if there
@@ -235,13 +245,13 @@ class GameScore:
         problematic for some applications.
         """
         if self.isDeuce:
-            self._currPointsP1 = self._currPointsP2 = 3
+            self._currPointsP1 = self._currPointsP2 = GameScore.NUM_POINTS_WIN - 1
         elif self.playerWithAdvantage == 1:
-            self._currPointsP1 = 4
-            self._currPointsP2 = 3
+            self._currPointsP1 = GameScore.NUM_POINTS_WIN
+            self._currPointsP2 = GameScore.NUM_POINTS_WIN - 1
         elif self.playerWithAdvantage == 2:
-            self._currPointsP1 = 3
-            self._currPointsP2 = 4
+            self._currPointsP1 = GameScore.NUM_POINTS_WIN - 1
+            self._currPointsP2 = GameScore.NUM_POINTS_WIN
 
     @staticmethod
     def _isValidScore(score: tuple[int, int]) -> bool:
@@ -263,11 +273,12 @@ class GameScore:
             return False
 
         # score below or at 40-40
-        if p1 <= 3 and p2 <= 3:
+        if p1 <= GameScore.NUM_POINTS_WIN - 1 and p2 <= GameScore.NUM_POINTS_WIN - 1:
             return True
 
         # game over before reaching deuce
-        if (p1 == 4 and p2 <= 2) or (p2 == 4 and p1 <= 2):
+        if (p1 == GameScore.NUM_POINTS_WIN and p2 <= GameScore.NUM_POINTS_WIN - 2) or \
+           (p2 == GameScore.NUM_POINTS_WIN and p1 <= GameScore.NUM_POINTS_WIN - 2):
             return True
 
         # the score reached deuce
@@ -289,13 +300,14 @@ class GameScore:
         """
         score_map = {0: "0", 1: "15", 2: "30", 3: "40"}
         pFirst, pSecond = score
-        if pFirst <= 3 and pSecond <= 3:
+        N = GameScore.NUM_POINTS_WIN
+        if pFirst <= N - 1 and pSecond <= N - 1:
             return f"{score_map[pFirst]}-{score_map[pSecond]}"
-        elif pFirst < 3 and pSecond == 4:
+        elif pFirst < N - 1 and pSecond == N:
             return f"{score_map[pFirst]}-win"
-        elif pSecond < 3 and pFirst == 4:
+        elif pSecond < N - 1 and pFirst == N:
             return f"win-{score_map[pSecond]}"
-        elif pFirst >= 3 and pSecond >= 3:
+        elif pFirst >= N - 1 and pSecond >= N - 1:
             if pFirst == pSecond:
                 return "deuce"
             elif pFirst == pSecond + 1:
@@ -314,15 +326,15 @@ class GameScore:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, GameScore):
             return NotImplemented
-        return (self._currPointsP1 == other._currPointsP1) and \
-               (self._currPointsP2 == other._currPointsP2) and \
-               (self._noAdRule == other._noAdRule)
+        return (self._currPointsP1 == other._currPointsP1 and
+                self._currPointsP2 == other._currPointsP2 and
+                self._noAdRule     == other._noAdRule)
 
     def __repr__(self) -> str:
         """
         Valid Python expression that can be used to recreate this GameScore instance.
         """
-        return f"GameScore(pointsP1={self._currPointsP1}, pointsP2={self._currPointsP2}, noAdRule={self._noAdRule}, normalize={self._normalize})"
+        return f"GameScore(pointsP1={self._currPointsP1}, pointsP2={self._currPointsP2}, matchFormat={repr(self._matchFormat)})"
 
     def __str__(self) -> str:
         """

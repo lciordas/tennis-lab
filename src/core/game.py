@@ -1,8 +1,9 @@
 """Game class representing a tennis game."""
 
-from copy                import deepcopy
-from typing              import List, Literal, Optional
-from src.core.game_score import GameScore
+from copy                  import deepcopy
+from typing                import List, Literal, Optional
+from src.core.game_score   import GameScore
+from src.core.match_format import MatchFormat
 
 class Game:
     """
@@ -10,7 +11,7 @@ class Game:
 
     The game need not start at 0-0; any valid initial score may be specified via
     the 'initScore' parameter. Scoring rules (standard or 'no-ad') are determined by
-    the 'initScore's settings; if no 'initScore' is provided, standard scoring is used.
+    the 'matchFormat' parameter or, if 'initScore' is provided, by its match format.
 
     Attributes:
     -----------
@@ -29,11 +30,11 @@ class Game:
 
     Methods:
     --------
-    __init__(playerToServe: Literal[1, 2], initScore: Optional[GameScore]=None)
+    __init__(playerToServe, initScore=None, matchFormat=None)
         Initialize a game - any valid initial score may be specified.
-    recordPoint(pointWinner: Literal[1, 2])
+    recordPoint(pointWinner)
         Updates the game state with the result of the next point.
-    recordPoints(self, pointWinners: List[Literal[1, 2]])
+    recordPoints(pointWinners)
         Update the game state with the result of multiple points.
     __str__() -> str
         Formatted string representation of the current game state.
@@ -43,30 +44,39 @@ class Game:
 
     def __init__(self,
                  playerToServe : Literal[1, 2],
-                 initScore     : Optional[GameScore]=None,
+                 initScore     : Optional[GameScore]   = None,
+                 matchFormat   : Optional[MatchFormat] = None,
                 _shareInitScore: bool = False):
         """
         Initialize a game - any valid initial score may be specified.
 
-        By default we create a game where standard scoring rules apply. If you want 
-        to customize it (for example - use the 'no ad' rule, you can do this via the 
-        initial score object you pass to __init__).
-
         Parameters:
         -----------
-        playerToServe   - which player serves this game (1 or 2)
-        initScore       - initial game score; if None, the score is initialized to 0-0
-        _shareInitScore - whether to share the initScore object (use default value unless
-                          you know what you are doing)
+        playerToServe  - which player serves this game (1 or 2)
+        initScore      - initial game score; if None, the score is initialized to 0-0
+        matchFormat    - match format; required if 'initScore' is None, otherwise optional
+       _shareInitScore - whether to share the initScore object (use default value unless
+                         you know what you are doing)
+
+        Raises:
+        -------
+        ValueError - if inputs are invalid or inconsistent
         """
         if playerToServe not in (1, 2):
             raise ValueError(f"Invalid playerToServe: {playerToServe}. Must be 1 or 2.")
         if initScore is not None and not isinstance(initScore, GameScore):
             raise ValueError(f"Invalid initScore: must be None or a GameScore instance.")
+        if matchFormat is not None and not isinstance(matchFormat, MatchFormat):
+            raise ValueError(f"Invalid matchFormat: must be None or a MatchFormat instance.")
+        if initScore is None and matchFormat is None:
+            raise ValueError("matchFormat is required when initScore is None.")
+        if initScore is not None and matchFormat is not None:
+            if initScore._matchFormat != matchFormat:
+                raise ValueError("initScore.matchFormat must match matchFormat.")
 
         # figure out the starting score
         if initScore: scoreStart = initScore if _shareInitScore else deepcopy(initScore)
-        else:         scoreStart = GameScore(0, 0, noAdRule=False)
+        else:         scoreStart = GameScore(0, 0, matchFormat)
 
         self.score       : GameScore              = scoreStart        # keeps track of the current score
         self.pointHistory: List[Literal[1,2]]     = []                # which player won each point following 'initScore'
@@ -124,7 +134,7 @@ class Game:
 
     def __repr__(self) -> str:
         """
-        String representation for debugging. 
+        String representation for debugging.
         Note: eval(repr(game)) recreates the game at its current score, but not the full point history.
         """
         return f"Game(playerToServe={self.server}, initScore={repr(self.score)})"
