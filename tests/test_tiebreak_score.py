@@ -394,14 +394,6 @@ class TestTiebreakScenarios:
 
     def test_super_tiebreak_p1_wins_10_8(self):
         score = TiebreakScore(0, 0, isSuper=True)
-        # P1 gets to 10-8
-        for _ in range(10):
-            score.recordPoint(1)
-        for _ in range(8):
-            score.recordPoint(2)
-        # Wait, that's wrong order - let me redo
-
-        score = TiebreakScore(0, 0, isSuper=True)
         # Simulate a 10-8 win for P1
         points = [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1]  # 10-8
         for p in points:
