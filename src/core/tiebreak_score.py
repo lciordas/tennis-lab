@@ -136,10 +136,13 @@ class TiebreakScore:
 
         Raises:
         -------
-        ValueError - if pointWinner is not 1 or 2
+        ValueError - if pointWinner is not 1 or 2, or if the tiebreak is already over
         """
         if pointWinner not in (1, 2):
             raise ValueError(f"Invalid pointWinner: {pointWinner}. Must be 1 or 2.")
+        if self.isFinal:
+            raise ValueError("Cannot record point: tiebreak is already over.")
+
         self._currPointsP1 += (1 if pointWinner == 1 else 0)
         self._currPointsP2 += (1 if pointWinner == 2 else 0)
 
