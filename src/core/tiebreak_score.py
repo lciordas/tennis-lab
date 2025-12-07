@@ -1,17 +1,11 @@
 """TiebreakScore class representing the score in a tiebreak or super-tiebreak."""
 
 from typing import Literal, Optional
+from src.core.match_format import MatchFormat, POINTS_TO_WIN_TIEBREAK, POINTS_TO_WIN_SUPERTIEBREAK
 
 class TiebreakScore:
     """
     Represents the running score of a tiebreak or super-tiebreak.
-
-    Class Constants:
-    ----------------
-    POINTS_TO_WIN_TIEBREAK : int
-        Points needed to win a standard tiebreak (7).
-    POINTS_TO_WIN_SUPER_TIEBREAK : int
-        Points needed to win a super-tiebreak (10).
 
     Attributes:
     -----------
@@ -30,7 +24,7 @@ class TiebreakScore:
 
     Methods:
     --------
-    __init__(pointsP1: int, pointsP2: int, isSuper: bool, normalize: bool = False)
+    __init__(pointsP1: int, pointsP2: int, isSuper: bool, matchFormat: MatchFormat)
         Initialize the score to an arbitrary (but valid) initial value.
     recordPoint(pointWinner: Literal[1, 2])
         Update the score with the result of the next point.
@@ -46,37 +40,36 @@ class TiebreakScore:
         Returns the score in "X-Y" format from Player 1's perspective.
     """
 
-    POINTS_TO_WIN_TIEBREAK       =  7
-    POINTS_TO_WIN_SUPER_TIEBREAK = 10
-
-    def __init__(self, pointsP1: int, pointsP2: int, isSuper: bool, normalize: bool = False):
+    def __init__(self, pointsP1: int, pointsP2: int, isSuper: bool, matchFormat: MatchFormat):
         """
         Initialize the score to an arbitrary (but valid) initial value.
 
         Parameters:
         -----------
-        pointsP1  - initial number of points for Player1
-        pointsP2  - initial number of points for Player2
-        isSuper   - True if this is a super-tiebreak
-        normalize - if True, automatically normalize the score after initialization
-                    and after each point update (default: False)
+        pointsP1    - initial number of points for Player1
+        pointsP2    - initial number of points for Player2
+        isSuper     - True if this is a super-tiebreak
+        matchFormat - describes the match format
 
         Raises:
         -------
-        ValueError - if isSuper is not a boolean or the score is not valid
+        ValueError - if isSuper is not a boolean, matchFormat is invalid, or the score is not valid
         """
         if not isinstance(isSuper, bool):
             raise ValueError(f"Invalid isSuper: {isSuper}. Must be a boolean.")
+        if not isinstance(matchFormat, MatchFormat):
+            raise ValueError(f"Invalid matchFormat: must be a MatchFormat instance.")
         if not TiebreakScore._isValidScore((pointsP1, pointsP2), isSuper):
             raise ValueError(f"Invalid initial score: {(pointsP1, pointsP2)}")
 
-        self._currPointsP1: int  = pointsP1
-        self._currPointsP2: int  = pointsP2
-        self._isSuper     : bool = isSuper
-        self._normalize   : bool = normalize
+        self._currPointsP1: int           = pointsP1
+        self._currPointsP2: int           = pointsP2
+        self._isSuper     : bool          = isSuper
+        self._matchFormat : "MatchFormat" = matchFormat
+        self._capPoints   : bool          = matchFormat.capPoints
 
-        if self._normalize:
-            self._normalize_score()
+        if self._capPoints:
+            self._cap_score()
 
     @property
     def isBlank(self) -> bool:
@@ -146,8 +139,8 @@ class TiebreakScore:
         self._currPointsP1 += (1 if pointWinner == 1 else 0)
         self._currPointsP2 += (1 if pointWinner == 2 else 0)
 
-        if self._normalize:
-            self._normalize_score()
+        if self._capPoints:
+            self._cap_score()
 
     def asPoints(self, pov: Literal[1,2]) -> tuple[int, int]:
         """
@@ -193,13 +186,13 @@ class TiebreakScore:
         if self.isFinal:
             return None
 
-        return TiebreakScore(self._currPointsP1+1, self._currPointsP2,   self._isSuper, self._normalize), \
-               TiebreakScore(self._currPointsP1,   self._currPointsP2+1, self._isSuper, self._normalize)
+        return TiebreakScore(self._currPointsP1+1, self._currPointsP2,   self._isSuper, self._matchFormat), \
+               TiebreakScore(self._currPointsP1,   self._currPointsP2+1, self._isSuper, self._matchFormat)
 
     @property
     def pointsToWin(self) -> int:
         """Returns the number of points needed to win based on tiebreak type."""
-        return self.POINTS_TO_WIN_SUPER_TIEBREAK if self._isSuper else self.POINTS_TO_WIN_TIEBREAK
+        return POINTS_TO_WIN_SUPERTIEBREAK if self._isSuper else POINTS_TO_WIN_TIEBREAK
 
     def _playerWon(self, player: Literal[1, 2]) -> bool:
         """
@@ -210,10 +203,10 @@ class TiebreakScore:
 
         return P1_won if player == 1 else P2_won
 
-    def _normalize_score(self):
+    def _cap_score(self):
         """
-        Normalizing the score means representing all deuces as 6-6 (9-9 if super),
-        and all adds as 6-7 or 7-6 (or 9-10, 10-9). Without normalization, if there
+        Capping the score means representing all deuces as 6-6 (9-9 if super),
+        and all adds as 6-7 or 7-6 (or 9-10, 10-9). Without capping, if there
         are multiple deuces, the score grows unbounded, which can be problematic for
         some applications.
         """
@@ -240,7 +233,7 @@ class TiebreakScore:
         --------
         True if the score is valid, else False.
         """
-        pointsToWin = TiebreakScore.POINTS_TO_WIN_SUPER_TIEBREAK if isSuper else TiebreakScore.POINTS_TO_WIN_TIEBREAK
+        pointsToWin = POINTS_TO_WIN_SUPERTIEBREAK if isSuper else POINTS_TO_WIN_TIEBREAK
         p1, p2 = score
         if not isinstance(p1, int) or not isinstance(p2, int):
             return False
@@ -262,7 +255,7 @@ class TiebreakScore:
         """
         Valid Python expression that can be used to recreate this TiebreakScore instance.
         """
-        return f"TiebreakScore(pointsP1={self._currPointsP1}, pointsP2={self._currPointsP2}, isSuper={self._isSuper}, normalize={self._normalize})"
+        return f"TiebreakScore(pointsP1={self._currPointsP1}, pointsP2={self._currPointsP2}, isSuper={self._isSuper}, matchFormat={repr(self._matchFormat)})"
 
     def __str__(self) -> str:
         """

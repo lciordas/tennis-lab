@@ -2,6 +2,7 @@
 
 from copy                    import deepcopy
 from typing                  import List, Literal, Optional
+from src.core.match_format   import MatchFormat
 from src.core.tiebreak_score import TiebreakScore
 
 class Tiebreak:
@@ -29,7 +30,7 @@ class Tiebreak:
 
     Methods:
     --------
-    __init__(playerToServe: Literal[1, 2], initScore: Optional[TiebreakScore]=None, isSuper: bool=False)
+    __init__(playerToServe: Literal[1, 2], isSuper: bool, initScore: Optional[TiebreakScore]=None, matchFormat: Optional[MatchFormat]=None)
         Initialize a tiebreak - any valid initial score may be specified.
     recordPoint(pointWinner: Literal[1, 2])
         Updates the tiebreak state with the result of the next point.
@@ -43,19 +44,25 @@ class Tiebreak:
 
     def __init__(self,
                  playerToServe : Literal[1, 2],
+                 isSuper       : bool,
                  initScore     : Optional[TiebreakScore] = None,
-                 isSuper       : bool = False,
-                _shareInitScore: bool = False):
+                 matchFormat   : Optional[MatchFormat]   = None,
+                _shareInitScore: bool                    = False):
         """
         Initialize a tiebreak - any valid initial score may be specified.
 
         Parameters:
         -----------
-        playerToServe   - which player serves the next point in the tiebreak (1 or 2)
-        initScore       - initial tiebreak score; if None, the score is initialized to 0-0
-        isSuper         - True if this is a super-tiebreak (default: False)
-        _shareInitScore - whether to share the initScore object (use default value unless
-                          you know what you are doing)
+        playerToServe  - which player serves the next point in the tiebreak (1 or 2)
+        isSuper        - True if this is a super-tiebreak
+        initScore      - initial tiebreak score; if None, the score is initialized to 0-0
+        matchFormat    - describes the match format; required if 'initScore' is None
+       _shareInitScore - whether to share the initScore object (use default value unless
+                         you know what you are doing)
+
+        Raises:
+        -------
+        ValueError - if inputs are invalid or inconsistent
         """
         if playerToServe not in (1, 2):
             raise ValueError(f"Invalid playerToServe: {playerToServe}. Must be 1 or 2.")
@@ -63,12 +70,19 @@ class Tiebreak:
             raise ValueError(f"Invalid initScore: must be None or a TiebreakScore instance.")
         if not isinstance(isSuper, bool):
             raise ValueError(f"Invalid isSuper: {isSuper}. Must be a boolean.")
+        if matchFormat is not None and not isinstance(matchFormat, MatchFormat):
+            raise ValueError(f"Invalid matchFormat: must be None or a MatchFormat instance.")
+        if initScore is None and matchFormat is None:
+            raise ValueError("matchFormat is required when initScore is None.")
         if initScore is not None and initScore._isSuper != isSuper:
             raise ValueError(f"initScore.isSuper ({initScore._isSuper}) must match isSuper ({isSuper}).")
+        if initScore is not None and matchFormat is not None:
+            if initScore._matchFormat != matchFormat:
+                raise ValueError("initScore.matchFormat must match matchFormat.")
 
         # figure out the starting score
         if initScore: scoreStart = initScore if _shareInitScore else deepcopy(initScore)
-        else:         scoreStart = TiebreakScore(0, 0, isSuper=isSuper)
+        else:         scoreStart = TiebreakScore(0, 0, isSuper=isSuper, matchFormat=matchFormat)
 
         self.score       : TiebreakScore       = scoreStart        # keeps track of the current score
         self.pointHistory: List[Literal[1, 2]] = []                # which player won each point following 'initScore'
@@ -139,7 +153,7 @@ class Tiebreak:
         String representation for debugging.
         Note: eval(repr(tiebreak)) recreates the tiebreak at its current score, but not the full point history.
         """
-        return f"Tiebreak(playerToServe={self.servesNext}, initScore={repr(self.score)}, isSuper={self.score._isSuper})"
+        return f"Tiebreak(playerToServe={self.servesNext}, isSuper={self.score._isSuper}, initScore={repr(self.score)})"
 
     def __str__(self) -> str:
         """
