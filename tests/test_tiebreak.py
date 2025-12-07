@@ -10,7 +10,7 @@ class TestTiebreakInit:
 
     def test_init_default_score(self):
         tb = Tiebreak(playerToServe=1)
-        assert tb.server == 1
+        assert tb.servesNext == 1
         assert tb.score.asPoints(1) == (0, 0)
         assert tb.pointHistory == []
         assert not tb.isOver
@@ -18,7 +18,7 @@ class TestTiebreakInit:
 
     def test_init_player2_serves(self):
         tb = Tiebreak(playerToServe=2)
-        assert tb.server == 2
+        assert tb.servesNext == 2
 
     def test_init_super_tiebreak(self):
         tb = Tiebreak(playerToServe=1, isSuper=True)
@@ -174,38 +174,38 @@ class TestTiebreakServerRotation:
 
     def test_server_after_first_point(self):
         tb = Tiebreak(playerToServe=1)
-        assert tb.server == 1
+        assert tb.servesNext == 1
         tb.recordPoint(1)
         # After first point, server switches
-        assert tb.server == 2
+        assert tb.servesNext == 2
 
     def test_server_rotation_pattern(self):
         tb = Tiebreak(playerToServe=1)
         # P1 serves first point
-        assert tb.server == 1
+        assert tb.servesNext == 1
         tb.recordPoint(1)  # 1-0
         # P2 serves points 2-3
-        assert tb.server == 2
+        assert tb.servesNext == 2
         tb.recordPoint(2)  # 1-1
-        assert tb.server == 2
+        assert tb.servesNext == 2
         tb.recordPoint(1)  # 2-1
         # P1 serves points 4-5
-        assert tb.server == 1
+        assert tb.servesNext == 1
         tb.recordPoint(1)  # 3-1
-        assert tb.server == 1
+        assert tb.servesNext == 1
         tb.recordPoint(2)  # 3-2
         # P2 serves points 6-7
-        assert tb.server == 2
+        assert tb.servesNext == 2
 
     def test_server_rotation_player2_starts(self):
         tb = Tiebreak(playerToServe=2)
-        assert tb.server == 2
+        assert tb.servesNext == 2
         tb.recordPoint(1)  # 1-0
-        assert tb.server == 1
+        assert tb.servesNext == 1
         tb.recordPoint(2)  # 1-1
-        assert tb.server == 1
+        assert tb.servesNext == 1
         tb.recordPoint(1)  # 2-1
-        assert tb.server == 2
+        assert tb.servesNext == 2
 
 
 class TestTiebreakScoreHistory:
@@ -271,7 +271,7 @@ class TestTiebreakRepr:
         tb.recordPoints([1, 2, 1])
         recreated = eval(repr(tb))
         assert recreated.score.asPoints(1) == tb.score.asPoints(1)
-        assert recreated.server == tb.server
+        assert recreated.servesNext == tb.servesNext
 
 
 class TestTiebreakStr:

@@ -14,10 +14,10 @@ class Tiebreak:
 
     Attributes:
     -----------
-    server: Literal[1,2]
-        Which player serves the next point
     score: TiebreakScore
         The current score of the tiebreak
+    servesNext: Literal[1,2]
+        Which player serves the next point
     isOver: bool
         Whether the tiebreak is over
     winner: Optional[Literal[1,2]]
@@ -72,7 +72,7 @@ class Tiebreak:
 
         self.score       : TiebreakScore       = scoreStart        # keeps track of the current score
         self.pointHistory: List[Literal[1, 2]] = []                # which player won each point following 'initScore'
-        self.server      : Literal[1, 2]       = playerToServe     # which player serves next point
+        self.servesNext  : Literal[1, 2]       = playerToServe     # which player serves next point
         self._servedFirst: Literal[1, 2]       = playerToServe     # remember which player served first
 
         # string representation of the score history
@@ -115,9 +115,9 @@ class Tiebreak:
         # update which player serves next
         totalPoints = self.score.asPoints(1)[0] + self.score.asPoints(1)[1]
         if totalPoints == 1:                                  # after first point, switch server
-            self.server = 3 - self._servedFirst
+            self.servesNext = 3 - self._servedFirst
         elif totalPoints > 1 and (totalPoints - 1) % 2 == 0:  # after that, switch every 2 points
-            self.server = 3 - self.server
+            self.servesNext = 3 - self.servesNext
 
         # incrementally build the string representation of the score history
         pServ, pRecv = self.score.asPoints(self._servedFirst)
@@ -139,15 +139,15 @@ class Tiebreak:
         String representation for debugging.
         Note: eval(repr(tiebreak)) recreates the tiebreak at its current score, but not the full point history.
         """
-        return f"Tiebreak(playerToServe={self.server}, initScore={repr(self.score)}, isSuper={self.score._isSuper})"
+        return f"Tiebreak(playerToServe={self.servesNext}, initScore={repr(self.score)}, isSuper={self.score._isSuper})"
 
     def __str__(self) -> str:
         """
         Formatted string representation of the current tiebreak state.
         """
         if not self.isOver:
-            pServ, pRecv = self.score.asPoints(self.server)
-            return f"Player{self.server} to serve at {pServ}-{pRecv}"
+            pServ, pRecv = self.score.asPoints(self.servesNext)
+            return f"Player{self.servesNext} to serve at {pServ}-{pRecv}"
         else:
             pWin, pLoss = self.score.asPoints(self.winner)
             return f"Player{self.winner} wins tiebreak: {pWin}-{pLoss}"
