@@ -1,66 +1,66 @@
-"""Tiebreaker class representing a tiebreaker in a tennis match."""
+"""Tiebreak class representing a tiebreak in a tennis match."""
 
-from copy                      import deepcopy
-from typing                    import List, Literal, Optional
-from src.core.tiebreaker_score import TiebreakerScore
+from copy                    import deepcopy
+from typing                  import List, Literal, Optional
+from src.core.tiebreak_score import TiebreakScore
 
-class Tiebreaker:
+class Tiebreak:
     """
-    Represents a tiebreaker in a tennis match.
+    Represents a tiebreak in a tennis match.
 
-    The tiebreaker need not start at 0-0; any valid initial score may be specified via
-    the 'initScore' parameter. Standard or super-tiebreaker rules are determined by
+    The tiebreak need not start at 0-0; any valid initial score may be specified via
+    the 'initScore' parameter. Standard or super-tiebreak rules are determined by
     the 'isSuper' parameter.
 
     Attributes:
     -----------
     server: Literal[1,2]
         Which player serves the next point
-    score: TiebreakerScore
-        The current score of the tiebreaker
+    score: TiebreakScore
+        The current score of the tiebreak
     isOver: bool
-        Whether the tiebreaker is over
+        Whether the tiebreak is over
     winner: Optional[Literal[1,2]]
-        Which player won the tiebreaker (1 or 2, but 'None' if the tiebreaker is not over)
+        Which player won the tiebreak (1 or 2, but 'None' if the tiebreak is not over)
     scoreHistory: str
-        Formatted string representation of the tiebreaker score history.
+        Formatted string representation of the tiebreak score history.
     pointHistory: list[Literal[1,2]]
         Which player won each point (following the initial score); ex: [1, 1, 2, 1, 1]
 
     Methods:
     --------
-    __init__(playerToServe: Literal[1, 2], initScore: Optional[TiebreakerScore]=None, isSuper: bool=False)
-        Initialize a tiebreaker - any valid initial score may be specified.
+    __init__(playerToServe: Literal[1, 2], initScore: Optional[TiebreakScore]=None, isSuper: bool=False)
+        Initialize a tiebreak - any valid initial score may be specified.
     recordPoint(pointWinner: Literal[1, 2])
-        Updates the tiebreaker state with the result of the next point.
+        Updates the tiebreak state with the result of the next point.
     recordPoints(self, pointWinners: List[Literal[1, 2]])
-        Update the tiebreaker state with the result of multiple points.
+        Update the tiebreak state with the result of multiple points.
     __str__() -> str
-        Formatted string representation of the current tiebreaker state.
+        Formatted string representation of the current tiebreak state.
     __repr__() -> str
-        Valid Python expression that can be used to recreate this Tiebreaker instance.
+        Valid Python expression that can be used to recreate this Tiebreak instance.
     """
 
     def __init__(self,
                  playerToServe : Literal[1, 2],
-                 initScore     : Optional[TiebreakerScore] = None,
+                 initScore     : Optional[TiebreakScore] = None,
                  isSuper       : bool = False,
                 _shareInitScore: bool = False):
         """
-        Initialize a tiebreaker - any valid initial score may be specified.
+        Initialize a tiebreak - any valid initial score may be specified.
 
         Parameters:
         -----------
-        playerToServe   - which player serves the next point in the tiebreaker (1 or 2)
-        initScore       - initial tiebreaker score; if None, the score is initialized to 0-0
-        isSuper         - True if this is a super-tiebreaker (default: False)
+        playerToServe   - which player serves the next point in the tiebreak (1 or 2)
+        initScore       - initial tiebreak score; if None, the score is initialized to 0-0
+        isSuper         - True if this is a super-tiebreak (default: False)
         _shareInitScore - whether to share the initScore object (use default value unless
                           you know what you are doing)
         """
         if playerToServe not in (1, 2):
             raise ValueError(f"Invalid playerToServe: {playerToServe}. Must be 1 or 2.")
-        if initScore is not None and not isinstance(initScore, TiebreakerScore):
-            raise ValueError(f"Invalid initScore: must be None or a TiebreakerScore instance.")
+        if initScore is not None and not isinstance(initScore, TiebreakScore):
+            raise ValueError(f"Invalid initScore: must be None or a TiebreakScore instance.")
         if not isinstance(isSuper, bool):
             raise ValueError(f"Invalid isSuper: {isSuper}. Must be a boolean.")
         if initScore is not None and initScore._isSuper != isSuper:
@@ -68,12 +68,12 @@ class Tiebreaker:
 
         # figure out the starting score
         if initScore: scoreStart = initScore if _shareInitScore else deepcopy(initScore)
-        else:         scoreStart = TiebreakerScore(0, 0, isSuper=isSuper)
+        else:         scoreStart = TiebreakScore(0, 0, isSuper=isSuper)
 
-        self.score       : TiebreakerScore          = scoreStart        # keeps track of the current score
-        self.pointHistory: List[Literal[1, 2]]      = []                # which player won each point following 'initScore'
-        self.server      : Literal[1, 2]            = playerToServe     # which player serves next point
-        self._servedFirst: Literal[1, 2]            = playerToServe     # remember which player served first
+        self.score       : TiebreakScore       = scoreStart        # keeps track of the current score
+        self.pointHistory: List[Literal[1, 2]] = []                # which player won each point following 'initScore'
+        self.server      : Literal[1, 2]       = playerToServe     # which player serves next point
+        self._servedFirst: Literal[1, 2]       = playerToServe     # remember which player served first
 
         # string representation of the score history
         pServ, pRecv = self.score.asPoints(playerToServe)
@@ -82,22 +82,22 @@ class Tiebreaker:
 
     @property
     def isOver(self) -> bool:
-        """Whether the tiebreaker is over."""
+        """Whether the tiebreak is over."""
         return self.score.isFinal
 
     @property
     def winner(self) -> Optional[Literal[1, 2]]:
-        """Which player won the tiebreaker (1 or 2), or None if the tiebreaker is not over."""
+        """Which player won the tiebreak (1 or 2), or None if the tiebreak is not over."""
         return self.score.winner
 
     @property
     def scoreHistory(self) -> str:
-        """Formatted string representation of the tiebreaker score history, server score is displayed first."""
+        """Formatted string representation of the tiebreak score history, server score is displayed first."""
         return self._scoreHistory[:-2]
 
     def recordPoint(self, pointWinner: Literal[1, 2]):
         """
-        Update the tiebreaker state with the result of the next point.
+        Update the tiebreak state with the result of the next point.
 
         Parameters:
         -----------
@@ -112,7 +112,7 @@ class Tiebreaker:
         self.score.recordPoint(pointWinner)
         self.pointHistory.append(pointWinner)
 
-        # update which player serves next 
+        # update which player serves next
         totalPoints = self.score.asPoints(1)[0] + self.score.asPoints(1)[1]
         if totalPoints == 1:                                  # after first point, switch server
             self.server = 3 - self._servedFirst
@@ -124,11 +124,11 @@ class Tiebreaker:
         self._scoreHistory += f"{pServ}-{pRecv}, "
         if self.isOver:
             self._scoreHistory = self._scoreHistory[:-2] + "\n"
-            self._scoreHistory += f"P{self.winner} wins tiebreaker  "
+            self._scoreHistory += f"P{self.winner} wins tiebreak  "
 
     def recordPoints(self, pointWinners: List[Literal[1, 2]]):
         """
-        Update the tiebreaker state with the result of multiple points.
+        Update the tiebreak state with the result of multiple points.
         pointWinners - which player won each point (1 or 2)
         """
         for pointWinner in pointWinners:
@@ -137,17 +137,17 @@ class Tiebreaker:
     def __repr__(self) -> str:
         """
         String representation for debugging.
-        Note: eval(repr(tiebreaker)) recreates the tiebreaker at its current score, but not the full point history.
+        Note: eval(repr(tiebreak)) recreates the tiebreak at its current score, but not the full point history.
         """
-        return f"Tiebreaker(playerToServe={self.server}, initScore={repr(self.score)}, isSuper={self.score._isSuper})"
+        return f"Tiebreak(playerToServe={self.server}, initScore={repr(self.score)}, isSuper={self.score._isSuper})"
 
     def __str__(self) -> str:
         """
-        Formatted string representation of the current tiebreaker state.
+        Formatted string representation of the current tiebreak state.
         """
         if not self.isOver:
             pServ, pRecv = self.score.asPoints(self.server)
             return f"Player{self.server} to serve at {pServ}-{pRecv}"
         else:
             pWin, pLoss = self.score.asPoints(self.winner)
-            return f"Player{self.winner} wins tiebreaker: {pWin}-{pLoss}"
+            return f"Player{self.winner} wins tiebreak: {pWin}-{pLoss}"
