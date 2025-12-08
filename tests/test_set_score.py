@@ -23,22 +23,22 @@ class TestSetScoreInit:
 
     def test_init_blank_score(self):
         score = SetScore(0, 0, False, DEFAULT_FORMAT)
-        assert score.gamesP1 == 0
-        assert score.gamesP2 == 0
+        assert score.gamesPlayer1 == 0
+        assert score.gamesPlayer2 == 0
         assert score.isBlank
 
     def test_init_with_games(self):
         score = SetScore(3, 2, False, DEFAULT_FORMAT)
-        assert score.gamesP1 == 3
-        assert score.gamesP2 == 2
+        assert score.gamesPlayer1 == 3
+        assert score.gamesPlayer2 == 2
         assert score.currGameScore is not None
         assert score.currGameScore.isBlank
 
     def test_init_with_game_score(self):
         game_score = GameScore(2, 1, DEFAULT_FORMAT)
         score = SetScore(3, 2, False, DEFAULT_FORMAT, gameScore=game_score)
-        assert score.gamesP1 == 3
-        assert score.gamesP2 == 2
+        assert score.gamesPlayer1 == 3
+        assert score.gamesPlayer2 == 2
         assert score.currGameScore.asPoints(1) == (2, 1)
 
     def test_init_at_tiebreak(self):
@@ -310,8 +310,8 @@ class TestRecordPoint:
         # P1 wins 4 points (game)
         for _ in range(4):
             score.recordPoint(1)
-        assert score.gamesP1 == 1
-        assert score.gamesP2 == 0
+        assert score.gamesPlayer1 == 1
+        assert score.gamesPlayer2 == 0
         assert score.currGameScore.isBlank
 
     def test_record_point_completes_set(self):
@@ -319,8 +319,8 @@ class TestRecordPoint:
         # P1 wins 4 points (game) to win set 6-0
         for _ in range(4):
             score.recordPoint(1)
-        assert score.gamesP1 == 6
-        assert score.gamesP2 == 0
+        assert score.gamesPlayer1 == 6
+        assert score.gamesPlayer2 == 0
         assert score.isFinal
         assert score.winner == 1
 
@@ -334,8 +334,8 @@ class TestRecordPoint:
         # P1 wins 7 points (tiebreak)
         for _ in range(7):
             score.recordPoint(1)
-        assert score.gamesP1 == 7
-        assert score.gamesP2 == 6
+        assert score.gamesPlayer1 == 7
+        assert score.gamesPlayer2 == 6
         assert score.isFinal
         assert score.winner == 1
 
@@ -344,14 +344,14 @@ class TestRecordPoint:
         # P1 wins a game to make it 6-5
         for _ in range(4):
             score.recordPoint(1)
-        assert score.gamesP1 == 6
-        assert score.gamesP2 == 5
+        assert score.gamesPlayer1 == 6
+        assert score.gamesPlayer2 == 5
         assert score.currGameScore is not None
         # P2 wins a game to make it 6-6
         for _ in range(4):
             score.recordPoint(2)
-        assert score.gamesP1 == 6
-        assert score.gamesP2 == 6
+        assert score.gamesPlayer1 == 6
+        assert score.gamesPlayer2 == 6
         assert score.tiebreakScore is not None
         assert score.currGameScore is None
 
@@ -362,10 +362,10 @@ class TestNextGameScores:
     def test_next_game_scores_basic(self):
         score = SetScore(3, 2, False, DEFAULT_FORMAT)
         next_p1, next_p2 = score.nextGameScores()
-        assert next_p1.gamesP1 == 4
-        assert next_p1.gamesP2 == 2
-        assert next_p2.gamesP1 == 3
-        assert next_p2.gamesP2 == 3
+        assert next_p1.gamesPlayer1 == 4
+        assert next_p1.gamesPlayer2 == 2
+        assert next_p2.gamesPlayer1 == 3
+        assert next_p2.gamesPlayer2 == 3
 
     def test_next_game_scores_final(self):
         score = SetScore(6, 4, False, DEFAULT_FORMAT)
@@ -420,14 +420,14 @@ class TestNoTiebreakSet:
         # P1 wins a game
         for _ in range(4):
             score.recordPoint(1)
-        assert score.gamesP1 == 7
-        assert score.gamesP2 == 6
+        assert score.gamesPlayer1 == 7
+        assert score.gamesPlayer2 == 6
         assert not score.isFinal
         # P2 wins a game
         for _ in range(4):
             score.recordPoint(2)
-        assert score.gamesP1 == 7
-        assert score.gamesP2 == 7
+        assert score.gamesPlayer1 == 7
+        assert score.gamesPlayer2 == 7
         assert not score.isFinal
 
 
@@ -476,8 +476,8 @@ class TestReprAndStr:
         # repr should produce valid Python
         score = SetScore(3, 2, False, DEFAULT_FORMAT)
         recreated = eval(repr(score))
-        assert recreated.gamesP1 == 3
-        assert recreated.gamesP2 == 2
+        assert recreated.gamesPlayer1 == 3
+        assert recreated.gamesPlayer2 == 2
 
     def test_str_basic(self):
         assert str(SetScore(3, 2, False, DEFAULT_FORMAT)) == "3-2, 0-0"
@@ -506,8 +506,8 @@ class TestPlayFullSet:
                 score.recordPoint(1)
         assert score.isFinal
         assert score.winner == 1
-        assert score.gamesP1 == 6
-        assert score.gamesP2 == 0
+        assert score.gamesPlayer1 == 6
+        assert score.gamesPlayer2 == 0
 
     def test_p2_wins_set_6_4(self):
         score = SetScore(0, 0, False, DEFAULT_FORMAT)
@@ -521,8 +521,8 @@ class TestPlayFullSet:
                 score.recordPoint(2)
         assert score.isFinal
         assert score.winner == 2
-        assert score.gamesP1 == 4
-        assert score.gamesP2 == 6
+        assert score.gamesPlayer1 == 4
+        assert score.gamesPlayer2 == 6
 
     def test_tiebreak_7_6(self):
         score = SetScore(0, 0, False, DEFAULT_FORMAT)
@@ -532,16 +532,16 @@ class TestPlayFullSet:
                 score.recordPoint(1)
             for point in range(4):
                 score.recordPoint(2)
-        assert score.gamesP1 == 6
-        assert score.gamesP2 == 6
+        assert score.gamesPlayer1 == 6
+        assert score.gamesPlayer2 == 6
         assert score.tiebreakScore is not None
         # P1 wins tiebreak 7-0
         for point in range(7):
             score.recordPoint(1)
         assert score.isFinal
         assert score.winner == 1
-        assert score.gamesP1 == 7
-        assert score.gamesP2 == 6
+        assert score.gamesPlayer1 == 7
+        assert score.gamesPlayer2 == 6
 
     def test_tiebreak_extended(self):
         score = SetScore(6, 6, False, DEFAULT_FORMAT)
@@ -566,18 +566,18 @@ class TestPlayFullSet:
                 score.recordPoint(1)
             for _ in range(4):
                 score.recordPoint(2)
-        assert score.gamesP1 == 10
-        assert score.gamesP2 == 10
+        assert score.gamesPlayer1 == 10
+        assert score.gamesPlayer2 == 10
         assert not score.isFinal
         # P1 wins two games to win 12-10
         for _ in range(4):
             score.recordPoint(1)
-        assert score.gamesP1 == 11
+        assert score.gamesPlayer1 == 11
         assert not score.isFinal
         for _ in range(4):
             score.recordPoint(1)
-        assert score.gamesP1 == 12
-        assert score.gamesP2 == 10
+        assert score.gamesPlayer1 == 12
+        assert score.gamesPlayer2 == 10
         assert score.isFinal
         assert score.winner == 1
 
@@ -596,5 +596,5 @@ class TestPlayFullSet:
         score.recordPoint(1)
         assert score.isFinal
         assert score.winner == 1
-        assert score.gamesP1 == 7
-        assert score.gamesP2 == 6
+        assert score.gamesPlayer1 == 7
+        assert score.gamesPlayer2 == 6

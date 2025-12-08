@@ -109,8 +109,8 @@ class SetScore:
             raise ValueError(f"Invalid initial score: {gamesP1}-{gamesP2}")
 
         # keep track of score
-        self.gamesP1      : int                     = gamesP1   # games won by Player1
-        self.gamesP2      : int                     = gamesP2   # games won by Player2
+        self._gamesP1     : int                     = gamesP1   # games won by Player1
+        self._gamesP2     : int                     = gamesP2   # games won by Player2
         self.currGameScore: Optional[GameScore]     = None      # score of current game
         self.tiebreakScore: Optional[TiebreakScore] = None      # score of current tiebreak
 
@@ -128,11 +128,21 @@ class SetScore:
                 self.tiebreakScore = TiebreakScore(0, 0, isSuper=isSuper, matchFormat=matchFormat)
 
     @property
+    def gamesPlayer1(self) -> int:
+        """Number of games won by Player 1."""
+        return self._gamesP1
+
+    @property
+    def gamesPlayer2(self) -> int:
+        """Number of games won by Player 2."""
+        return self._gamesP2
+
+    @property
     def isBlank(self) -> bool:
         """
         Whether the score is 'blank',  i.e. no point has been completed so far.
         """
-        return (self.gamesP1 == self.gamesP2 == 0) and \
+        return (self.gamesPlayer1 == self.gamesPlayer2 == 0) and \
                (self.currGameScore is None or self.currGameScore.isBlank) and \
                (self.tiebreakScore is None or self.tiebreakScore.isBlank)
 
@@ -141,7 +151,7 @@ class SetScore:
         """
         Returns whether the set is tied (e.g., 6-6 for standard sets).
         """
-        return self.gamesP1 == self.gamesP2 == self._matchFormat.setLength
+        return self.gamesPlayer1 == self.gamesPlayer2 == self._matchFormat.setLength
 
     @property
     def isFinal(self) -> bool:
@@ -225,7 +235,7 @@ class SetScore:
         """
         if pov not in (1, 2):
             raise ValueError(f"Invalid pov: {pov}. Must be 1 or 2.")
-        return (self.gamesP1, self.gamesP2) if pov == 1 else (self.gamesP2, self.gamesP1)
+        return (self.gamesPlayer1, self.gamesPlayer2) if pov == 1 else (self.gamesPlayer2, self.gamesPlayer1)
 
     def nextGameScores(self) -> Optional[tuple["SetScore", "SetScore"]]:
         """
@@ -254,8 +264,8 @@ class SetScore:
         if self.isFinal:
             return None
 
-        return SetScore(self.gamesP1+1, self.gamesP2,   self._isFinalSet, self._matchFormat), \
-               SetScore(self.gamesP1,   self.gamesP2+1, self._isFinalSet, self._matchFormat)
+        return SetScore(self.gamesPlayer1+1, self.gamesPlayer2,   self._isFinalSet, self._matchFormat), \
+               SetScore(self.gamesPlayer1,   self.gamesPlayer2+1, self._isFinalSet, self._matchFormat)
 
     def recordPoint(self, pointWinner: Literal[1, 2]):
         """
@@ -294,8 +304,8 @@ class SetScore:
         """
         Update the score with the result of the current game.
         """
-        self.gamesP1 += (1 if gameWinner == 1 else 0)
-        self.gamesP2 += (1 if gameWinner == 2 else 0)
+        self._gamesP1 += (1 if gameWinner == 1 else 0)
+        self._gamesP2 += (1 if gameWinner == 2 else 0)
 
         if self.nextPointIsGame:
             self.currGameScore = GameScore(0, 0, self._matchFormat)
@@ -313,8 +323,8 @@ class SetScore:
         """
         Update the score with the result of the tiebreak.
         """
-        self.gamesP1 += (1 if tiebreakWinner == 1 else 0)
-        self.gamesP2 += (1 if tiebreakWinner == 2 else 0)
+        self._gamesP1 += (1 if tiebreakWinner == 1 else 0)
+        self._gamesP2 += (1 if tiebreakWinner == 2 else 0)
 
         # the set is over once the tiebreak completes
         self.currGameScore = None
@@ -324,8 +334,8 @@ class SetScore:
         """
         Tests whether a given player won the set, considering the current score.
         """
-        playerGames   = self.gamesP1 if player == 1 else self.gamesP2
-        opponentGames = self.gamesP2 if player == 1 else self.gamesP1
+        playerGames   = self.gamesPlayer1 if player == 1 else self.gamesPlayer2
+        opponentGames = self.gamesPlayer2 if player == 1 else self.gamesPlayer1
         n = self._matchFormat.setLength
 
         # if the set can be decided by tiebreak, there are two ways to win:
@@ -343,8 +353,8 @@ class SetScore:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, SetScore):
             return NotImplemented
-        return (self.gamesP1       == other.gamesP1)       and \
-               (self.gamesP2       == other.gamesP2)       and \
+        return (self.gamesPlayer1       == other.gamesPlayer1)       and \
+               (self.gamesPlayer2       == other.gamesPlayer2)       and \
                (self.currGameScore == other.currGameScore) and \
                (self.tiebreakScore == other.tiebreakScore)
 
@@ -352,7 +362,7 @@ class SetScore:
         """
         Valid Python expression that can be used to recreate this SetScore instance.
         """
-        return f"SetScore(gamesP1={self.gamesP1}, gamesP2={self.gamesP2}, " + \
+        return f"SetScore(gamesP1={self.gamesPlayer1}, gamesP2={self.gamesPlayer2}, " + \
                f"isFinalSet={self._isFinalSet}, matchFormat={repr(self._matchFormat)}, " + \
                f"gameScore={repr(self.currGameScore)}, tiebreakScore={repr(self.tiebreakScore)})"
 
@@ -370,7 +380,7 @@ class SetScore:
         return s
 
     def __hash__(self) -> int:
-        return hash((self.gamesP1, self.gamesP2, self.currGameScore, self.tiebreakScore))
+        return hash((self.gamesPlayer1, self.gamesPlayer2, self.currGameScore, self.tiebreakScore))
 
     @staticmethod
     def _isValidScore(initGamesP1      : int,
