@@ -1,5 +1,6 @@
 """SetScore class representing the score in a tennis set."""
 
+from copy import deepcopy
 from typing import Literal, Optional
 
 from src.core.game_score     import GameScore
@@ -116,12 +117,12 @@ class SetScore:
 
         # if the next point is part of a regular game, initialize the score for that game
         if self.nextPointIsGame:
-            self.currGameScore = gameScore if gameScore else GameScore(0, 0, matchFormat)
+            self.currGameScore = deepcopy(gameScore) if gameScore else GameScore(0, 0, matchFormat)
 
         # if the next point is part of a regular tiebreak, initialize the score for that tiebreak
         if self.nextPointIsTiebreak:
             if tiebreakScore:
-                self.tiebreakScore = tiebreakScore
+                self.tiebreakScore = deepcopy(tiebreakScore)
             else:
                 ending  = self._matchFormat.finalSetEnding if self._isFinalSet else self._matchFormat.setEnding
                 isSuper = ending == SetEnding.SUPERTIEBREAK
