@@ -214,6 +214,16 @@ class MatchScore:
             self.currSetScore = None if self.isFinal else \
                 SetScore(0, 0, self._isFinalSet(), self._matchFormat)
 
+    def _recordSet(self, setWinner: Literal[1, 2]):
+        """
+        Update the score with the result of the current set.
+        This is used by the Match class which tracks scores at the set granularity.
+        """
+        self._setsP1 += (1 if setWinner == 1 else 0)
+        self._setsP2 += (1 if setWinner == 2 else 0)
+        self.currSetScore = None if self.isFinal else \
+            SetScore(0, 0, self._isFinalSet(), self._matchFormat)
+
     def _playerWon(self, player: Literal[1, 2]) -> bool:
         """
         Tests whether a given player won the match.
