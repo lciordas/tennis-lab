@@ -112,3 +112,7 @@ class MatchFormat:
                 self.finalSetEnding == other.finalSetEnding and
                 self.noAdRule       == other.noAdRule       and
                 self.capPoints      == other.capPoints)
+
+    def __hash__(self) -> int:
+        return hash((self.bestOfSets, self.matchTiebreak, self.setLength,
+                     self.setEnding, self.finalSetEnding, self.noAdRule, self.capPoints))
