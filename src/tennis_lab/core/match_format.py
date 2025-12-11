@@ -1,6 +1,7 @@
 """MatchFormat class descriging the format for a given tennis match."""
 
 from enum import Enum
+from typing import Optional
 
 # Points needed to win a tiebreak or super-tiebreak
 POINTS_TO_WIN_TIEBREAK      =  7
@@ -20,8 +21,8 @@ class MatchFormat:
 
     Attributes:
     -----------
-    bestOfSets: int
-        Maximum number of sets in the match.
+    bestOfSets: Optional[int]
+        Maximum number of sets in the match (None if not specified).
     matchTiebreak: bool
         Whether a match tiebreak replaces the final set when tied at sets (default: False)
     setLength: int
@@ -33,36 +34,36 @@ class MatchFormat:
     noAdRule: bool
         Whether games use the 'no ad' rule (default: False)
     capPoints: bool
-        Whether to represent all deuces as 3-3 and all adds as 3-4 or 4-3. (default: False)
+        Whether to represent all deuces as 3-3 and all adds as 3-4 or 4-3. (default: True)
     """
 
     def __init__(self,
-                 bestOfSets    : int,
-                 matchTiebreak : bool      = False,
-                 setLength     : int       = 6,
-                 setEnding     : SetEnding = SetEnding.TIEBREAK,
-                 finalSetEnding: SetEnding = SetEnding.TIEBREAK,
-                 noAdRule      : bool      = False,
-                 capPoints     : bool      = False):
+                 bestOfSets    : Optional[int] = None,
+                 matchTiebreak : bool          = False,
+                 setLength     : int           = 6,
+                 setEnding     : SetEnding     = SetEnding.TIEBREAK,
+                 finalSetEnding: SetEnding     = SetEnding.TIEBREAK,
+                 noAdRule      : bool          = False,
+                 capPoints     : bool          = True):
         """
         Initialize match format with scoring rules.
 
         Parameters:
         -----------
-        bestOfSets     - max number of sets in the match (usually 3 or 5)
+        bestOfSets     - max number of sets in the match (usually 3 or 5), or None if not needed
         matchTiebreak  - whether a match tiebreak replaces the final set when tied at sets (default: False)
         setLength      - number of games needed to win a set (default: 6)
         setEnding      - how a (non-final) set ends when tied (default: SetEnding.TIEBREAK)
         finalSetEnding - how the final set ends when tied (default: SetEnding.TIEBREAK)
         noAdRule       - whether games use the 'no ad' rule (default: False)
-        capPoints      - whether to represent all deuces as 3-3 and all adds as 3-4 or 4-3 (default: False)
+        capPoints      - whether to represent all deuces as 3-3 and all adds as 3-4 or 4-3 (default: True)
 
         Raises:
         -------
         ValueError - if any of the inputs are invalid
         """
-        if not isinstance(bestOfSets, int) or bestOfSets < 1:
-            raise ValueError(f"Invalid bestOfSets: {bestOfSets}. Must be a positive integer.")
+        if bestOfSets is not None and (not isinstance(bestOfSets, int) or bestOfSets < 1):
+            raise ValueError(f"Invalid bestOfSets: {bestOfSets}. Must be None or a positive integer.")
         if not isinstance(matchTiebreak, bool):
             raise ValueError(f"Invalid matchTiebreak: {matchTiebreak}. Must be a boolean.")
         if not isinstance(setLength, int) or setLength < 1:
@@ -76,13 +77,13 @@ class MatchFormat:
         if not isinstance(capPoints, bool):
             raise ValueError(f"Invalid capPoints: {capPoints}. Must be a boolean.")
 
-        self.bestOfSets    : int       = bestOfSets
-        self.matchTiebreak : bool      = matchTiebreak
-        self.setLength     : int       = setLength
-        self.setEnding     : SetEnding = setEnding
-        self.finalSetEnding: SetEnding = finalSetEnding
-        self.noAdRule      : bool      = noAdRule
-        self.capPoints     : bool      = capPoints
+        self.bestOfSets    : Optional[int] = bestOfSets
+        self.matchTiebreak : bool          = matchTiebreak
+        self.setLength     : int           = setLength
+        self.setEnding     : SetEnding     = setEnding
+        self.finalSetEnding: SetEnding     = finalSetEnding
+        self.noAdRule      : bool          = noAdRule
+        self.capPoints     : bool          = capPoints
 
     def __repr__(self) -> str:
         """Valid Python expression that can be used to recreate this MatchFormat instance."""

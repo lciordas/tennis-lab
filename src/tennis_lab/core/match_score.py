@@ -70,6 +70,8 @@ class MatchScore:
             raise ValueError(f"Invalid sets: setsP1={setsP1}, setsP2={setsP2}. Must be integers.")
         if not isinstance(matchFormat, MatchFormat):
             raise ValueError(f"Invalid matchFormat: must be a MatchFormat instance.")
+        if matchFormat.bestOfSets is None:
+            raise ValueError("matchFormat.bestOfSets must be specified for MatchScore.")
         if setScore is not None and not isinstance(setScore, SetScore):
             raise ValueError(f"Invalid setScore: must be None or a SetScore instance.")
         if setScore is not None and setScore.isFinal:
