@@ -72,3 +72,6 @@ CLAUDE.md
 # Windows
 Thumbs.db
 ehthumbs.db
+
+# Project-specific
+data-cache/
