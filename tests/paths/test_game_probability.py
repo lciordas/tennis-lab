@@ -3,7 +3,7 @@
 import pytest
 import math
 from tennis_lab.paths.game_path import GamePath
-from tennis_lab.paths.game_probability import pathProbability, probabilityServerWinsGame
+from tennis_lab.paths.game_probability import pathProbability, probabilityServerWinsGame, loadCachedFunction
 from tennis_lab.core.game_score import GameScore
 from tennis_lab.core.match_format import MatchFormat
 
@@ -474,3 +474,140 @@ class TestProbabilityServerWinsGameProbabilitySum:
         # Server loses = receiver wins
         # This equals 1 - prob_win
         assert math.isclose(prob_win + (1 - prob_win), 1.0, rel_tol=1e-9)
+
+
+# =============================================================================
+# Tests for loadCachedFunction
+# =============================================================================
+
+class TestLoadCachedFunctionValidation:
+    """Tests for loadCachedFunction input validation."""
+
+    def test_invalid_init_score_type(self):
+        with pytest.raises(ValueError, match="initScore must be a GameScore"):
+            loadCachedFunction("not a score", 1)
+
+    def test_invalid_init_score_none(self):
+        with pytest.raises(ValueError, match="initScore must be a GameScore"):
+            loadCachedFunction(None, 1)
+
+    def test_invalid_player_serving_zero(self):
+        gs = GameScore(0, 0, DEFAULT_FORMAT)
+        with pytest.raises(ValueError, match="playerServing must be 1 or 2"):
+            loadCachedFunction(gs, 0)
+
+    def test_invalid_player_serving_three(self):
+        gs = GameScore(0, 0, DEFAULT_FORMAT)
+        with pytest.raises(ValueError, match="playerServing must be 1 or 2"):
+            loadCachedFunction(gs, 3)
+
+    def test_invalid_player_serving_string(self):
+        gs = GameScore(0, 0, DEFAULT_FORMAT)
+        with pytest.raises(ValueError, match="playerServing must be 1 or 2"):
+            loadCachedFunction(gs, "1")
+
+
+class TestLoadCachedFunctionBehavior:
+    """Tests for loadCachedFunction behavior (skip if cache unavailable)."""
+
+    def test_returns_callable_or_none(self):
+        """Function should return a callable or None."""
+        gs = GameScore(0, 0, DEFAULT_FORMAT)
+        result = loadCachedFunction(gs, 1)
+        assert result is None or callable(result)
+
+    def test_cached_function_returns_float(self):
+        """If cache available, returned function should return a float."""
+        gs = GameScore(0, 0, DEFAULT_FORMAT)
+        cached_fn = loadCachedFunction(gs, 1)
+        if cached_fn is None:
+            pytest.skip("Cached data not available")
+        result = cached_fn(0.65)
+        assert isinstance(result, float)
+
+    def test_cached_function_matches_direct_calculation(self):
+        """Cached function should match direct probabilityServerWinsGame calculation."""
+        gs = GameScore(0, 0, DEFAULT_FORMAT)
+        cached_fn = loadCachedFunction(gs, 1)
+        if cached_fn is None:
+            pytest.skip("Cached data not available")
+
+        p = 0.65
+        cached_result = cached_fn(p)
+        direct_result = probabilityServerWinsGame(gs, 1, p)
+        # Allow some tolerance due to interpolation
+        assert math.isclose(cached_result, direct_result, rel_tol=0.01)
+
+    def test_cached_function_from_30_15(self):
+        """Test cached function from 30-15 score."""
+        gs = GameScore(2, 1, DEFAULT_FORMAT)
+        cached_fn = loadCachedFunction(gs, 1)
+        if cached_fn is None:
+            pytest.skip("Cached data not available")
+
+        p = 0.60
+        cached_result = cached_fn(p)
+        direct_result = probabilityServerWinsGame(gs, 1, p)
+        assert math.isclose(cached_result, direct_result, rel_tol=0.01)
+
+    def test_cached_function_from_deuce(self):
+        """Test cached function from deuce (3-3)."""
+        gs = GameScore(3, 3, DEFAULT_FORMAT)
+        cached_fn = loadCachedFunction(gs, 1)
+        if cached_fn is None:
+            pytest.skip("Cached data not available")
+
+        p = 0.65
+        cached_result = cached_fn(p)
+        direct_result = probabilityServerWinsGame(gs, 1, p)
+        assert math.isclose(cached_result, direct_result, rel_tol=0.01)
+
+    def test_cached_function_from_extended_deuce(self):
+        """Test that extended deuce (5-5) is capped to 3-3 and works correctly."""
+        gs_extended = GameScore(5, 5, DEFAULT_FORMAT)
+        gs_capped = GameScore(3, 3, DEFAULT_FORMAT)
+
+        cached_fn_extended = loadCachedFunction(gs_extended, 1)
+        cached_fn_capped = loadCachedFunction(gs_capped, 1)
+
+        if cached_fn_extended is None or cached_fn_capped is None:
+            pytest.skip("Cached data not available")
+
+        p = 0.65
+        # Both should return the same result since 5-5 is capped to 3-3
+        assert math.isclose(cached_fn_extended(p), cached_fn_capped(p), rel_tol=1e-9)
+
+    def test_cached_function_no_ad_rule(self):
+        """Test cached function with no-ad rule."""
+        gs = GameScore(0, 0, NO_AD_FORMAT)
+        cached_fn = loadCachedFunction(gs, 1)
+        if cached_fn is None:
+            pytest.skip("Cached data not available")
+
+        p = 0.65
+        cached_result = cached_fn(p)
+        direct_result = probabilityServerWinsGame(gs, 1, p)
+        assert math.isclose(cached_result, direct_result, rel_tol=0.01)
+
+    def test_cached_function_player2_serving(self):
+        """Test cached function when player 2 is serving."""
+        gs = GameScore(1, 2, DEFAULT_FORMAT)  # 15-30
+        cached_fn = loadCachedFunction(gs, 2)
+        if cached_fn is None:
+            pytest.skip("Cached data not available")
+
+        p = 0.60
+        cached_result = cached_fn(p)
+        direct_result = probabilityServerWinsGame(gs, 2, p)
+        assert math.isclose(cached_result, direct_result, rel_tol=0.01)
+
+    def test_cached_probability_bounds(self):
+        """Cached probability should be between 0 and 1."""
+        gs = GameScore(0, 0, DEFAULT_FORMAT)
+        cached_fn = loadCachedFunction(gs, 1)
+        if cached_fn is None:
+            pytest.skip("Cached data not available")
+
+        for p in [0.1, 0.3, 0.5, 0.7, 0.9]:
+            result = cached_fn(p)
+            assert 0.0 <= result <= 1.0
