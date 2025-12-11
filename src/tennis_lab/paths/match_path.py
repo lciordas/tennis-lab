@@ -3,7 +3,7 @@
 from __future__ import annotations
 from copy       import deepcopy
 from typing     import Literal
-from src.core.match_score import MatchScore
+from tennis_lab.core.match_score import MatchScore
 
 class MatchPath:
     """

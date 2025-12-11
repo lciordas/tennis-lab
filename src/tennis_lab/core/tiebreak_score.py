@@ -1,7 +1,7 @@
 """TiebreakScore class representing the score in a tiebreak or super-tiebreak."""
 
 from typing import Literal, Optional
-from src.core.match_format import MatchFormat, POINTS_TO_WIN_TIEBREAK, POINTS_TO_WIN_SUPERTIEBREAK
+from tennis_lab.core.match_format import MatchFormat, POINTS_TO_WIN_TIEBREAK, POINTS_TO_WIN_SUPERTIEBREAK
 
 class TiebreakScore:
     """

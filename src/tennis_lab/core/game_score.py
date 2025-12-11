@@ -1,7 +1,7 @@
 """GameScore class representing the score in a tennis game."""
 
 from typing import Literal, Optional
-from src.core.match_format import MatchFormat
+from tennis_lab.core.match_format import MatchFormat
 
 class GameScore:
     """

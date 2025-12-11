@@ -1,9 +1,9 @@
 """Tests for the Tiebreak class."""
 
 import pytest
-from src.core.tiebreak import Tiebreak
-from src.core.tiebreak_score import TiebreakScore
-from src.core.match_format import MatchFormat, SetEnding
+from tennis_lab.core.tiebreak import Tiebreak
+from tennis_lab.core.tiebreak_score import TiebreakScore
+from tennis_lab.core.match_format import MatchFormat, SetEnding
 
 # Default match format for tests
 DEFAULT_FORMAT = MatchFormat(bestOfSets=3)

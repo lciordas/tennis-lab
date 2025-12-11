@@ -8,8 +8,8 @@ probabilityServerWinsGame - probability that the server wins the game from a giv
 """
 
 from typing import Literal
-from src.paths.game_path import GamePath
-from src.core.game_score import GameScore
+from tennis_lab.paths.game_path import GamePath
+from tennis_lab.core.game_score import GameScore
 
 def pathProbability(path         : GamePath,
                     playerToServe: Literal[1,2],

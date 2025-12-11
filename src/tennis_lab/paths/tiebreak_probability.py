@@ -8,8 +8,8 @@ probabilityP1WinsTiebreak - probability that P1 wins the tiebreak from a given s
 """
 
 from typing import Literal
-from src.paths.tiebreak_path import TiebreakPath
-from src.core.tiebreak_score import TiebreakScore
+from tennis_lab.paths.tiebreak_path import TiebreakPath
+from tennis_lab.core.tiebreak_score import TiebreakScore
 
 def pathProbability(path          : TiebreakPath,
                     probWinPointP1: float,

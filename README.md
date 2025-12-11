@@ -1,11 +1,11 @@
-# Tennis Analytics
+# Tennis Lab
 
 A Python library for tennis analytics, quantitative models, and Monte Carlo simulations.
 
 ## Installation
 
 ```bash
-pip install tennis-analytics
+pip install tennis-lab
 ```
 
 For development:
@@ -17,7 +17,9 @@ pip install -e ".[dev,notebooks]"
 ## Usage
 
 ```python
-import tennis_analytics
+import tennis_lab
+from tennis_lab.core.match import Match
+from tennis_lab.core.game_score import GameScore
 ```
 
 ## Development

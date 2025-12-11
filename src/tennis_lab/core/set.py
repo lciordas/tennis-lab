@@ -3,10 +3,10 @@
 from copy   import deepcopy
 from typing import List, Literal, Optional
 
-from src.core.game         import Game
-from src.core.match_format import MatchFormat
-from src.core.set_score    import SetScore
-from src.core.tiebreak     import Tiebreak
+from tennis_lab.core.game         import Game
+from tennis_lab.core.match_format import MatchFormat
+from tennis_lab.core.set_score    import SetScore
+from tennis_lab.core.tiebreak     import Tiebreak
 
 class Set:
     """

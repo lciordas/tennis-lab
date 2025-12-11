@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tennis-analytics"
+name = "tennis-lab"
 version = "0.1.0"
 description = "A Python library for tennis analytics, quantitative models, and Monte Carlo simulations"
 readme = "README.md"
@@ -40,8 +40,8 @@ notebooks = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/tennis-analytics"
-Repository = "https://github.com/yourusername/tennis-analytics"
+Homepage = "https://github.com/yourusername/tennis-lab"
+Repository = "https://github.com/yourusername/tennis-lab"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -4,7 +4,7 @@ from __future__  import annotations
 from collections import namedtuple
 from copy        import deepcopy
 from typing      import Literal
-from src.core.set_score import SetScore
+from tennis_lab.core.set_score import SetScore
 
 class SetPath:
     """

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from copy import deepcopy
-from src.core.game_score import GameScore
+from tennis_lab.core.game_score import GameScore
 
 class GamePath:
     """

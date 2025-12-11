@@ -1,8 +1,8 @@
 """Tests for the GameScore class."""
 
 import pytest
-from src.core.game_score   import GameScore
-from src.core.match_format import MatchFormat, SetEnding
+from tennis_lab.core.game_score   import GameScore
+from tennis_lab.core.match_format import MatchFormat, SetEnding
 
 # Default match format for most tests
 DEFAULT_FORMAT = MatchFormat(bestOfSets=3)

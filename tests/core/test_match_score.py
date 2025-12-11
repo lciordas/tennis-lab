@@ -1,11 +1,11 @@
 """Tests for MatchScore class."""
 
 import pytest
-from src.core.match_score import MatchScore
-from src.core.set_score import SetScore
-from src.core.game_score import GameScore
-from src.core.tiebreak_score import TiebreakScore
-from src.core.match_format import MatchFormat, SetEnding
+from tennis_lab.core.match_score import MatchScore
+from tennis_lab.core.set_score import SetScore
+from tennis_lab.core.game_score import GameScore
+from tennis_lab.core.tiebreak_score import TiebreakScore
+from tennis_lab.core.match_format import MatchFormat, SetEnding
 
 
 # Common match formats for testing

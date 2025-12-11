@@ -4,7 +4,7 @@ from __future__  import annotations
 from collections import namedtuple
 from copy        import deepcopy
 from typing      import Literal
-from src.core.tiebreak_score import TiebreakScore
+from tennis_lab.core.tiebreak_score import TiebreakScore
 
 class TiebreakPath:
     """

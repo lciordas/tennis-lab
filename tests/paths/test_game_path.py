@@ -1,9 +1,9 @@
 """Tests for the GamePath class."""
 
 import pytest
-from src.paths.game_path import GamePath
-from src.core.game_score     import GameScore
-from src.core.match_format   import MatchFormat
+from tennis_lab.paths.game_path import GamePath
+from tennis_lab.core.game_score     import GameScore
+from tennis_lab.core.match_format   import MatchFormat
 
 # Default match formats for tests
 DEFAULT_FORMAT = MatchFormat(bestOfSets=3)

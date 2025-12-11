@@ -3,9 +3,9 @@
 from copy import deepcopy
 from typing import Literal, Optional
 
-from src.core.game_score     import GameScore
-from src.core.match_format   import MatchFormat, SetEnding
-from src.core.tiebreak_score import TiebreakScore
+from tennis_lab.core.game_score     import GameScore
+from tennis_lab.core.match_format   import MatchFormat, SetEnding
+from tennis_lab.core.tiebreak_score import TiebreakScore
 
 class SetScore:
     """

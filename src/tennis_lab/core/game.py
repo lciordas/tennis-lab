@@ -2,8 +2,8 @@
 
 from copy                  import deepcopy
 from typing                import List, Literal, Optional
-from src.core.game_score   import GameScore
-from src.core.match_format import MatchFormat
+from tennis_lab.core.game_score   import GameScore
+from tennis_lab.core.match_format import MatchFormat
 
 class Game:
     """

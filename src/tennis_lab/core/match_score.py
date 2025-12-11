@@ -3,8 +3,8 @@
 from copy import deepcopy
 from typing import Literal, Optional
 
-from src.core.match_format import MatchFormat
-from src.core.set_score    import SetScore
+from tennis_lab.core.match_format import MatchFormat
+from tennis_lab.core.set_score    import SetScore
 
 class MatchScore:
     """

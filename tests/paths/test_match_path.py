@@ -1,10 +1,10 @@
 """Tests for the MatchPath class."""
 
 import pytest
-from src.paths.match_path import MatchPath
-from src.core.match_score import MatchScore
-from src.core.match_format import MatchFormat
-from src.core.set_score import SetScore
+from tennis_lab.paths.match_path import MatchPath
+from tennis_lab.core.match_score import MatchScore
+from tennis_lab.core.match_format import MatchFormat
+from tennis_lab.core.set_score import SetScore
 
 # Default match formats for tests
 BEST_OF_3 = MatchFormat(bestOfSets=3)

@@ -1,10 +1,10 @@
 """Tests for the SetPath class."""
 
 import pytest
-from src.paths.set_path import SetPath
-from src.core.set_score import SetScore
-from src.core.game_score import GameScore
-from src.core.match_format import MatchFormat
+from tennis_lab.paths.set_path import SetPath
+from tennis_lab.core.set_score import SetScore
+from tennis_lab.core.game_score import GameScore
+from tennis_lab.core.match_format import MatchFormat
 
 # Default match format for tests
 DEFAULT_FORMAT = MatchFormat(bestOfSets=3)
@@ -69,7 +69,7 @@ class TestSetPathInit:
 
     def test_init_with_tiebreak_in_progress_raises(self):
         """Cannot create SetPath with a tiebreak in progress."""
-        from src.core.tiebreak_score import TiebreakScore
+        from tennis_lab.core.tiebreak_score import TiebreakScore
         ts = TiebreakScore(3, 2, False, DEFAULT_FORMAT)
         ss = SetScore(6, 6, False, DEFAULT_FORMAT, tiebreakScore=ts)
         with pytest.raises(ValueError, match="cannot have a game or tiebreak in progress"):

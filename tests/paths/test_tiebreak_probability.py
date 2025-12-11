@@ -2,10 +2,10 @@
 
 import pytest
 import math
-from src.paths.tiebreak_path import TiebreakPath
-from src.paths.tiebreak_probability import pathProbability, probabilityP1WinsTiebreak, _probabilityP1WinsTie
-from src.core.tiebreak_score import TiebreakScore
-from src.core.match_format import MatchFormat
+from tennis_lab.paths.tiebreak_path import TiebreakPath
+from tennis_lab.paths.tiebreak_probability import pathProbability, probabilityP1WinsTiebreak, _probabilityP1WinsTie
+from tennis_lab.core.tiebreak_score import TiebreakScore
+from tennis_lab.core.match_format import MatchFormat
 
 # Default match format for tests
 DEFAULT_FORMAT = MatchFormat(bestOfSets=3)

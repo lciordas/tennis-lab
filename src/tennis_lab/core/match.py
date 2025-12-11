@@ -3,9 +3,9 @@
 from copy   import deepcopy
 from typing import List, Literal, Optional
 
-from src.core.match_format import MatchFormat
-from src.core.match_score  import MatchScore
-from src.core.set          import Set
+from tennis_lab.core.match_format import MatchFormat
+from tennis_lab.core.match_score  import MatchScore
+from tennis_lab.core.set          import Set
 
 class Match:
     """

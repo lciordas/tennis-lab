@@ -2,8 +2,8 @@
 
 from copy                    import deepcopy
 from typing                  import List, Literal, Optional
-from src.core.match_format   import MatchFormat
-from src.core.tiebreak_score import TiebreakScore
+from tennis_lab.core.match_format   import MatchFormat
+from tennis_lab.core.tiebreak_score import TiebreakScore
 
 class Tiebreak:
     """
