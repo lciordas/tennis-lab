@@ -27,7 +27,7 @@ class GameScore:
 
     Methods:
     --------
-    __init__(pointsP1: int, pointsP2: int, matchFormat: MatchFormat)
+    __init__(pointsP1: int, pointsP2: int, matchFormat: Optional[MatchFormat] = None)
         Initialize the score to an arbitrary (but valid) initial value.
     recordPoint(pointWinner: Literal[1, 2])
         Update the score with the result of the next point.
@@ -51,7 +51,7 @@ class GameScore:
     def __init__(self,
                  pointsP1   : int,
                  pointsP2   : int,
-                 matchFormat: MatchFormat):
+                 matchFormat: Optional[MatchFormat] = None):
         """
         Initialize the score to an arbitrary (but valid) initial value.
 
@@ -59,16 +59,21 @@ class GameScore:
         player, and not by the more traditional tennis convention of 0, 15, 30, 40.
         Example: the score 30-15 is represented as (2,1).
 
+        Note: pointsP1 refers to Player 1's score, but this does not imply that
+        Player 1 is the one serving this game. The server is tracked separately.
+
         Parameters:
         -----------
         pointsP1    - initial number of points for Player1
         pointsP2    - initial number of points for Player2
-        matchFormat - describes the match format (example: whether using 'no ad' rule)
+        matchFormat - describes the match format (default: MatchFormat with default arguments)
 
         Raises:
         -------
         ValueError - if the score is not valid
         """
+        if matchFormat is None:
+            matchFormat = MatchFormat()
         if not GameScore._isValidScore((pointsP1, pointsP2)):
             raise ValueError(f"Invalid initial score: {(pointsP1, pointsP2)}")
 
