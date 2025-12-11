@@ -41,7 +41,7 @@ def pathProbability(path          : TiebreakPath,
 
         pointsP1Curr = entries[i  ].score.asPoints(pov=1)[0]   # Player1 # of points now
         pointsP1Prev = entries[i-1].score.asPoints(pov=1)[0]   # Player1 # of points previously
-        P1served     = entries[i-1].playerToServe == 1         # did Player1 serve for the point?
+        P1served     = entries[i-1].playerServing == 1         # did Player1 serve for the point?
         P1wonPoint   = pointsP1Curr > pointsP1Prev             # did Player1 win the point?
         P2wonPoint   = not P1wonPoint
 
@@ -56,10 +56,10 @@ def pathProbability(path          : TiebreakPath,
 
     return probPath
 
-def probabilityP1WinsTiebreak(initScore     : TiebreakScore,
-                              playerToServe : Literal[1, 2],
-                              probWinPointP1: float,
-                              probWinPointP2: float) -> float:
+def probabilityP1WinsTiebreak(initScore      : TiebreakScore,
+                              playerServing  : Literal[1, 2],
+                              probWinPointP1 : float,
+                              probWinPointP2 : float) -> float:
     """
     Calculates the probability that Player1 wins the tiebreak from a given score.
 
@@ -81,7 +81,7 @@ def probabilityP1WinsTiebreak(initScore     : TiebreakScore,
     Parameters:
     -----------
     initScore      - the initial score in the tiebreak
-    playerToServe  - which player is serving the next point (1 or 2)
+    playerServing  - which player is serving the next point (1 or 2)
     probWinPointP1 - probability that Player1 wins the point when serving
     probWinPointP2 - probability that Player2 wins the point when serving
 
@@ -91,15 +91,15 @@ def probabilityP1WinsTiebreak(initScore     : TiebreakScore,
     """
     if not isinstance(initScore, TiebreakScore):
         raise ValueError("initScore must be a TiebreakScore instance")
-    if not isinstance(playerToServe, int) or playerToServe not in [1, 2]:
-        raise ValueError("playerToServe must be 1 or 2")
+    if not isinstance(playerServing, int) or playerServing not in [1, 2]:
+        raise ValueError("playerServing must be 1 or 2")
     if not isinstance(probWinPointP1, (int, float)) or not (0 <= probWinPointP1 <= 1):
         raise ValueError("probWinPointP1 must be a number between 0 and 1")
     if not isinstance(probWinPointP2, (int, float)) or not (0 <= probWinPointP2 <= 1):
         raise ValueError("probWinPointP2 must be a number between 0 and 1")
 
     # generate all possible paths starting from the initial score
-    allPaths = TiebreakPath.generateAllPaths(initScore, playerToServe)
+    allPaths = TiebreakPath.generateAllPaths(initScore, playerServing)
 
     # add up the probability of P1 winning the tiebreak along each path
     probWinTiebreak = 0.0

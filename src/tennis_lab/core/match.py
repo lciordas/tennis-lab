@@ -51,7 +51,7 @@ class Match:
     """
 
     def __init__(self,
-                 playerToServe : Literal[1, 2],
+                 playerServing : Literal[1, 2],
                  matchFormat   : Optional[MatchFormat] = None,
                  initScore     : Optional[MatchScore]  = None,
                 _shareInitScore: bool                  = False):
@@ -60,7 +60,7 @@ class Match:
 
         Parameters:
         -----------
-        playerToServe  - which player serves first in this match (1 or 2)
+        playerServing  - which player serves first in this match (1 or 2)
         matchFormat    - describes the match format; required if 'initScore' is None
         initScore      - initial match score; if None, the score is initialized to 0-0
        _shareInitScore - whether to share the initScore object (use default value unless
@@ -70,8 +70,8 @@ class Match:
         -------
         ValueError - if any of the inputs are invalid or mismatched
         """
-        if playerToServe not in (1, 2):
-            raise ValueError(f"Invalid playerToServe: {playerToServe}. Must be 1 or 2.")
+        if playerServing not in (1, 2):
+            raise ValueError(f"Invalid playerServing: {playerServing}. Must be 1 or 2.")
         if matchFormat is not None and not isinstance(matchFormat, MatchFormat):
             raise ValueError(f"Invalid matchFormat: must be None or a MatchFormat instance.")
         if initScore is not None and not isinstance(initScore, MatchScore):
@@ -95,7 +95,7 @@ class Match:
         # Note the '_shareInitScore=True' argument.        
         self.currentSet: Optional[Set] = None
         if not self.score.isFinal:
-            self.currentSet = Set(playerToServe, self.score._isFinalSet(), self.score.currSetScore,
+            self.currentSet = Set(playerServing, self.score._isFinalSet(), self.score.currSetScore,
                                   self._matchFormat, _shareInitScore=True)
 
         self.setHistory: List[Set] = []  # completed Set instances
@@ -232,5 +232,5 @@ class Match:
         """
         Valid Python expression that can be used to recreate this Match instance.
         """
-        return f"Match(playerToServe={self.servesNext}, " \
+        return f"Match(playerServing={self.servesNext}, " \
                f"matchFormat={repr(self._matchFormat)}, initScore={repr(self.score)})"

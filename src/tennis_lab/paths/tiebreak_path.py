@@ -18,11 +18,11 @@ class TiebreakPath:
 
     Methods:
     --------
-    __init__(initialScore: TiebreakScore, playerToServe: Literal[1,2])
+    __init__(initialScore: TiebreakScore, playerServing: Literal[1,2])
        Initialize the path with its initial score.
     increment() -> tuple["TiebreakPath", "TiebreakPath"] | "TiebreakPath"
         Extend the path by one point, with the result of the point being a win for either player.
-    generateAllPaths(initialScore: TiebreakScore, playerToServe: Literal[1,2]) -> list["TiebreakPath"]
+    generateAllPaths(initialScore: TiebreakScore, playerServing: Literal[1,2]) -> list["TiebreakPath"]
         Factory method generating all possible tiebreak score paths that start from a given initial score.
     __str__() -> str
         Returns a string representation of the score history.
@@ -31,29 +31,29 @@ class TiebreakPath:
     # A "path entry" bundles together two items:
     #  + the tiebreak score (an instance of TiebreakScore)
     #  + which player serves this point (1 or 2)
-    PathEntry = namedtuple('PathEntry', ('score', 'playerToServe'))
+    PathEntry = namedtuple('PathEntry', ('score', 'playerServing'))
 
-    def __init__(self, initialScore: TiebreakScore, playerToServe: Literal[1, 2]):
+    def __init__(self, initialScore: TiebreakScore, playerServing: Literal[1, 2]):
         """
         Initialize the path with its initial score.
 
         Parameters:
         -----------
         initialScore  - the starting score of the score progression
-        playerToServe - which player is serving the next point
+        playerServing - which player is serving the next point
 
         Raises:
         -------
         ValueError - if initialScore is not a TiebreakScore instance
-        ValueError - if playerToServe is not 1 or 2
+        ValueError - if playerServing is not 1 or 2
         """
         if not isinstance(initialScore, TiebreakScore):
             raise ValueError(f"Invalid initialScore: must be a TiebreakScore instance.")
-        if not isinstance(playerToServe, int) or playerToServe not in [1, 2]:
-            raise ValueError("playerToServe must be 1 or 2")
+        if not isinstance(playerServing, int) or playerServing not in [1, 2]:
+            raise ValueError("playerServing must be 1 or 2")
 
         self._entries: list[TiebreakPath.PathEntry] = [
-            TiebreakPath.PathEntry(score=initialScore, playerToServe=playerToServe)
+            TiebreakPath.PathEntry(score=initialScore, playerServing=playerServing)
         ]
 
     @property
@@ -89,29 +89,29 @@ class TiebreakPath:
         pointsP1, pointsP2 = lastScore.asPoints(pov=1)
         pointsPlayed       = pointsP1 + pointsP2
         switchServe        = pointsPlayed % 2 == 0
-        playerServingNext  = (3 - lastEntry.playerToServe) if switchServe else lastEntry.playerToServe
+        playerServingNext  = (3 - lastEntry.playerServing) if switchServe else lastEntry.playerServing
 
         # create two new paths, one for each possible outcome of the next point
         path1 = deepcopy(self)
-        path1._entries.append(TiebreakPath.PathEntry(score=nextScores[0], playerToServe=playerServingNext))
+        path1._entries.append(TiebreakPath.PathEntry(score=nextScores[0], playerServing=playerServingNext))
 
         path2 = deepcopy(self)
-        path2._entries.append(TiebreakPath.PathEntry(score=nextScores[1], playerToServe=playerServingNext))
+        path2._entries.append(TiebreakPath.PathEntry(score=nextScores[1], playerServing=playerServingNext))
 
         return path1, path2
 
     @staticmethod
     def generateAllPaths(initialScore: TiebreakScore,
-                         playerToServe: Literal[1, 2]) -> list["TiebreakPath"]:
+                         playerServing: Literal[1, 2]) -> list["TiebreakPath"]:
         """
         Factory method generating all possible score paths that start from a given initial score.
 
         Parameters:
         -----------
         initialScore  - the starting score for all paths
-        playerToServe - which player is serving the next point
+        playerServing - which player is serving the next point
         """
-        seedPath = TiebreakPath(initialScore, playerToServe)
+        seedPath = TiebreakPath(initialScore, playerServing)
         return TiebreakPath._extendPaths([seedPath])
 
     @staticmethod
@@ -161,10 +161,10 @@ class TiebreakPath:
     def __str__(self) -> str:
         """
         Returns a string representation of the path, as a list of
-        tuples: (pointsP1, pointsP2, playerToServe).
+        tuples: (pointsP1, pointsP2, playerServing).
         """
         s = "["
         for entry in self._entries:
             p1, p2 = entry.score.asPoints(pov=1)
-            s += str((p1, p2, entry.playerToServe)) + ", "
+            s += str((p1, p2, entry.playerServing)) + ", "
         return s[:-2] + "]"

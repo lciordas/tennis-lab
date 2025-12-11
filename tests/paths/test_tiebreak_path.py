@@ -17,14 +17,14 @@ class TestTiebreakPathInit:
         path = TiebreakPath(ts, 1)
         assert len(path.scoreHistory) == 1
         assert path.scoreHistory[0].score.asPoints(1) == (0, 0)
-        assert path.scoreHistory[0].playerToServe == 1
+        assert path.scoreHistory[0].playerServing == 1
 
     def test_init_with_non_zero_score(self):
         ts = TiebreakScore(3, 2, False, DEFAULT_FORMAT)
         path = TiebreakPath(ts, 2)
         assert len(path.scoreHistory) == 1
         assert path.scoreHistory[0].score.asPoints(1) == (3, 2)
-        assert path.scoreHistory[0].playerToServe == 2
+        assert path.scoreHistory[0].playerServing == 2
 
     def test_init_with_final_score(self):
         ts = TiebreakScore(7, 0, False, DEFAULT_FORMAT)
@@ -35,12 +35,12 @@ class TestTiebreakPathInit:
     def test_init_player1_serving(self):
         ts = TiebreakScore(0, 0, False, DEFAULT_FORMAT)
         path = TiebreakPath(ts, 1)
-        assert path.scoreHistory[0].playerToServe == 1
+        assert path.scoreHistory[0].playerServing == 1
 
     def test_init_player2_serving(self):
         ts = TiebreakScore(0, 0, False, DEFAULT_FORMAT)
         path = TiebreakPath(ts, 2)
-        assert path.scoreHistory[0].playerToServe == 2
+        assert path.scoreHistory[0].playerServing == 2
 
     def test_init_invalid_score_type(self):
         with pytest.raises(ValueError):
@@ -78,7 +78,7 @@ class TestTiebreakPathScoreHistory:
         path = TiebreakPath(ts, 1)
         entry = path.scoreHistory[0]
         assert hasattr(entry, 'score')
-        assert hasattr(entry, 'playerToServe')
+        assert hasattr(entry, 'playerServing')
 
 
 class TestTiebreakPathIncrement:
@@ -137,7 +137,7 @@ class TestTiebreakPathIncrement:
         # Modifying one shouldn't affect the other
         path1._entries.append(TiebreakPath.PathEntry(
             score=TiebreakScore(2, 0, False, DEFAULT_FORMAT),
-            playerToServe=1
+            playerServing=1
         ))
         assert len(path2.scoreHistory) == 2
 
@@ -152,8 +152,8 @@ class TestTiebreakPathServerRotation:
         path1, path2 = path.increment()
 
         # After the first point, P2 should serve
-        assert path1.scoreHistory[-1].playerToServe == 2
-        assert path2.scoreHistory[-1].playerToServe == 2
+        assert path1.scoreHistory[-1].playerServing == 2
+        assert path2.scoreHistory[-1].playerServing == 2
 
     def test_server_stays_for_two_points_after_switch(self):
         """After switching, the same player serves 2 points."""
@@ -165,9 +165,9 @@ class TestTiebreakPathServerRotation:
         path2, _ = path1.increment()     # Now at 2-0, P2 serves
         path3, _ = path2.increment()     # Now at 3-0, P1 serves
 
-        assert path1.scoreHistory[-1].playerToServe == 2  # After 1 point
-        assert path2.scoreHistory[-1].playerToServe == 2  # After 2 points
-        assert path3.scoreHistory[-1].playerToServe == 1  # After 3 points, switch
+        assert path1.scoreHistory[-1].playerServing == 2  # After 1 point
+        assert path2.scoreHistory[-1].playerServing == 2  # After 2 points
+        assert path3.scoreHistory[-1].playerServing == 1  # After 3 points, switch
 
     def test_full_7_0_path_server_rotation(self):
         """Verify server rotation for a 7-0 tiebreak win."""
@@ -184,7 +184,7 @@ class TestTiebreakPathServerRotation:
         assert path_7_0 is not None
 
         # Extract servers for each point
-        servers = [entry.playerToServe for entry in path_7_0.scoreHistory]
+        servers = [entry.playerServing for entry in path_7_0.scoreHistory]
 
         # Expected: P1 serves 1, then P2 serves 2, then P1 serves 2, etc.
         # 0-0(P1), 1-0(P2), 2-0(P2), 3-0(P1), 4-0(P1), 5-0(P2), 6-0(P2), 7-0(P1)
@@ -204,7 +204,7 @@ class TestTiebreakPathServerRotation:
                 break
 
         assert path_7_0 is not None
-        servers = [entry.playerToServe for entry in path_7_0.scoreHistory]
+        servers = [entry.playerServing for entry in path_7_0.scoreHistory]
 
         # Expected: P2 serves 1, then P1 serves 2, then P2 serves 2, etc.
         expected_servers = [2, 1, 1, 2, 2, 1, 1, 2]
@@ -513,6 +513,6 @@ class TestTiebreakPathEdgeCases:
 
         # Test both attribute and index access
         assert entry.score == entry[0]
-        assert entry.playerToServe == entry[1]
+        assert entry.playerServing == entry[1]
         assert entry.score.asPoints(1) == (0, 0)
-        assert entry.playerToServe == 1
+        assert entry.playerServing == 1

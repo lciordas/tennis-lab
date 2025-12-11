@@ -67,14 +67,14 @@ initScores       = initScoresInter + initScoresP1Won + initScoresP1Lost
 # Calculate the probability of winning the tiebreak starting from all possible scores.
 # Two such calculations are performed, to allow either Player 1 or Player 2 to serve the next point.
 iteration = 0
-for playerToServe in (1, 2):
+for playerServing in (1, 2):
     for (pointsP1, pointsP2) in initScores:
         iteration += 1
-        print(f"\r[{iteration:3d}/{2 * len(initScores):3d}] P{playerToServe} serving, score ({pointsP1}, {pointsP2})...", end="", flush=True)
+        print(f"\r[{iteration:3d}/{2 * len(initScores):3d}] P{playerServing} serving, score ({pointsP1}, {pointsP2})...", end="", flush=True)
         score = TiebreakScore(pointsP1, pointsP2, IS_SUPER)
 
         if (pointsP1, pointsP2) in initScoresInter:
-            ProbWinTB = [[probabilityP1WinsTiebreak(score, playerToServe, p1, p2) for p2 in P2s] for p1 in P1s]
+            ProbWinTB = [[probabilityP1WinsTiebreak(score, playerServing, p1, p2) for p2 in P2s] for p1 in P1s]
         elif (pointsP1, pointsP2) in initScoresP1Won:
             ProbWinTB = [[1.0 for p2 in P2s] for p1 in P1s]
         elif (pointsP1, pointsP2) in initScoresP1Lost:
@@ -85,7 +85,7 @@ for playerToServe in (1, 2):
         probWinTBreakInterp = RectBivariateSpline(P1s, P2s, ProbWinTB)
 
         # Save the interpolated function to file
-        fname = f"prob_win_tbreak{pointsToWin}_P{playerToServe}_{pointsP1}{pointsP2}.pkl"
+        fname = f"prob_win_tbreak{pointsToWin}_P{playerServing}_{pointsP1}{pointsP2}.pkl"
         with open(Path(DIRPATH, fname), 'wb') as fh:
             pickle.dump(probWinTBreakInterp, fh)
 

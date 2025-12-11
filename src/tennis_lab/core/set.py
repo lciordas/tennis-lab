@@ -56,7 +56,7 @@ class Set:
     """
 
     def __init__(self,
-                 playerToServe : Literal[1, 2],
+                 playerServing : Literal[1, 2],
                  isFinalSet    : bool,
                  initScore     : Optional[SetScore]    = None,
                  matchFormat   : Optional[MatchFormat] = None,
@@ -66,7 +66,7 @@ class Set:
 
         Parameters:
         -----------
-        playerToServe  - which player serves next in the set (1 or 2)
+        playerServing  - which player serves next in the set (1 or 2)
         isFinalSet     - whether this is the final set of the match
         initScore      - initial set score; if None, the score is initialized to 0-0
         matchFormat    - describes the match format; required if 'initScore' is None
@@ -77,8 +77,8 @@ class Set:
         -------
         ValueError - if any of the inputs are invalid or mismatched
         """
-        if playerToServe not in (1, 2):
-            raise ValueError(f"Invalid playerToServe: {playerToServe}. Must be 1 or 2.")
+        if playerServing not in (1, 2):
+            raise ValueError(f"Invalid playerServing: {playerServing}. Must be 1 or 2.")
         if not isinstance(isFinalSet, bool):
             raise ValueError(f"Invalid isFinalSet: {isFinalSet}. Must be a boolean.")
         if initScore is not None and not isinstance(initScore, SetScore):
@@ -107,14 +107,14 @@ class Set:
         # Note the '_shareInitScore=True' argument.
         self.currentGame: Optional[Game] = None
         if self.score.nextPointIsGame:
-            self.currentGame = Game(playerToServe, self.score.currGameScore, self._matchFormat, _shareInitScore=True)
+            self.currentGame = Game(playerServing=playerServing, initScore=self.score.currGameScore, matchFormat=self._matchFormat, _shareInitScore=True)
 
         # object that represents the tiebreak being played next (if any)
         # Note the '_shareInitScore=True' argument.
         self.tiebreaker: Optional[Tiebreak] = None
         if self.score.nextPointIsTiebreak:
-            self.tiebreaker = Tiebreak(playerToServe, self.score.tiebreakScore._isSuper,
-                                       self.score.tiebreakScore, self._matchFormat, _shareInitScore=True)
+            self.tiebreaker = Tiebreak(playerServing=playerServing, isSuper=self.score.tiebreakScore._isSuper,
+                                       initScore=self.score.tiebreakScore, matchFormat=self._matchFormat, _shareInitScore=True)
 
         self.gameHistory: List[Game|Tiebreak] = []   # completed Game/Tiebreak instances
 
@@ -289,14 +289,14 @@ class Set:
             self.tiebreaker  = None
 
         elif self.score.nextPointIsTiebreak:
-            self.tiebreaker  = Tiebreak(servingNext, self.score.tiebreakScore._isSuper,
-                                        self.score.tiebreakScore, self._matchFormat,
-                                       _shareInitScore=True)
+            self.tiebreaker  = Tiebreak(playerServing=servingNext, isSuper=self.score.tiebreakScore._isSuper,
+                                        initScore=self.score.tiebreakScore, matchFormat=self._matchFormat,
+                                        _shareInitScore=True)
             self.currentGame = None
 
         else:
-            self.currentGame = Game(servingNext, self.score.currGameScore,
-                                    self._matchFormat, _shareInitScore=True)
+            self.currentGame = Game(playerServing=servingNext, initScore=self.score.currGameScore,
+                                    matchFormat=self._matchFormat, _shareInitScore=True)
             self.tiebreaker  = None
 
     def _onTiebreakOver(self):
@@ -348,5 +348,5 @@ class Set:
         """
         Valid Python expression that can be used to recreate this Set instance.
         """
-        return f"Set(playerToServe={self.servesNext}, isFinalSet={self._isFinalSet}, " \
+        return f"Set(playerServing={self.servesNext}, isFinalSet={self._isFinalSet}, " \
                f"matchFormat={repr(self._matchFormat)}, initScore={repr(self.score)})"

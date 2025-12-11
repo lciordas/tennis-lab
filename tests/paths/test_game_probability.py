@@ -30,13 +30,13 @@ class TestPathProbabilityValidation:
     def test_invalid_player_to_serve_zero(self):
         gs = GameScore(0, 0, DEFAULT_FORMAT)
         path = GamePath(gs)
-        with pytest.raises(ValueError, match="playerToServe must be 1 or 2"):
+        with pytest.raises(ValueError, match="playerServing must be 1 or 2"):
             pathProbability(path, 0, 0.6)
 
     def test_invalid_player_to_serve_three(self):
         gs = GameScore(0, 0, DEFAULT_FORMAT)
         path = GamePath(gs)
-        with pytest.raises(ValueError, match="playerToServe must be 1 or 2"):
+        with pytest.raises(ValueError, match="playerServing must be 1 or 2"):
             pathProbability(path, 3, 0.6)
 
     def test_invalid_prob_negative(self):
@@ -228,7 +228,7 @@ class TestProbabilityServerWinsGameValidation:
 
     def test_invalid_player_to_serve(self):
         gs = GameScore(0, 0, DEFAULT_FORMAT)
-        with pytest.raises(ValueError, match="playerToServe must be 1 or 2"):
+        with pytest.raises(ValueError, match="playerServing must be 1 or 2"):
             probabilityServerWinsGame(gs, 0, 0.6)
 
     def test_invalid_prob_win_point(self):

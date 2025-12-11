@@ -249,12 +249,12 @@ class TestProbabilityP1WinsTiebreakValidation:
 
     def test_invalid_player_to_serve_zero(self):
         ts = TiebreakScore(0, 0, False, DEFAULT_FORMAT)
-        with pytest.raises(ValueError, match="playerToServe must be 1 or 2"):
+        with pytest.raises(ValueError, match="playerServing must be 1 or 2"):
             probabilityP1WinsTiebreak(ts, 0, 0.65, 0.60)
 
     def test_invalid_player_to_serve_three(self):
         ts = TiebreakScore(0, 0, False, DEFAULT_FORMAT)
-        with pytest.raises(ValueError, match="playerToServe must be 1 or 2"):
+        with pytest.raises(ValueError, match="playerServing must be 1 or 2"):
             probabilityP1WinsTiebreak(ts, 3, 0.65, 0.60)
 
     def test_invalid_prob_p1(self):

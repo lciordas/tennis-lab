@@ -18,14 +18,14 @@ class TestSetPathInit:
         path = SetPath(ss, 1)
         assert len(path.scoreHistory) == 1
         assert path.scoreHistory[0].score.games(pov=1) == (0, 0)
-        assert path.scoreHistory[0].playerToServe == 1
+        assert path.scoreHistory[0].playerServing == 1
 
     def test_init_with_non_zero_score(self):
         ss = SetScore(3, 2, False, DEFAULT_FORMAT)
         path = SetPath(ss, 2)
         assert len(path.scoreHistory) == 1
         assert path.scoreHistory[0].score.games(pov=1) == (3, 2)
-        assert path.scoreHistory[0].playerToServe == 2
+        assert path.scoreHistory[0].playerServing == 2
 
     def test_init_with_final_score(self):
         ss = SetScore(6, 4, False, DEFAULT_FORMAT)
@@ -36,12 +36,12 @@ class TestSetPathInit:
     def test_init_player1_serving(self):
         ss = SetScore(0, 0, False, DEFAULT_FORMAT)
         path = SetPath(ss, 1)
-        assert path.scoreHistory[0].playerToServe == 1
+        assert path.scoreHistory[0].playerServing == 1
 
     def test_init_player2_serving(self):
         ss = SetScore(0, 0, False, DEFAULT_FORMAT)
         path = SetPath(ss, 2)
-        assert path.scoreHistory[0].playerToServe == 2
+        assert path.scoreHistory[0].playerServing == 2
 
     def test_init_invalid_score_type(self):
         with pytest.raises(ValueError, match="initialScore must be a SetScore"):
@@ -53,11 +53,11 @@ class TestSetPathInit:
 
     def test_init_invalid_player_to_serve(self):
         ss = SetScore(0, 0, False, DEFAULT_FORMAT)
-        with pytest.raises(ValueError, match="playerToServe must be 1 or 2"):
+        with pytest.raises(ValueError, match="playerServing must be 1 or 2"):
             SetPath(ss, 0)
-        with pytest.raises(ValueError, match="playerToServe must be 1 or 2"):
+        with pytest.raises(ValueError, match="playerServing must be 1 or 2"):
             SetPath(ss, 3)
-        with pytest.raises(ValueError, match="playerToServe must be 1 or 2"):
+        with pytest.raises(ValueError, match="playerServing must be 1 or 2"):
             SetPath(ss, "1")
 
     def test_init_with_game_in_progress_raises(self):
@@ -94,7 +94,7 @@ class TestSetPathScoreHistory:
         path = SetPath(ss, 1)
         entry = path.scoreHistory[0]
         assert hasattr(entry, 'score')
-        assert hasattr(entry, 'playerToServe')
+        assert hasattr(entry, 'playerServing')
 
 
 class TestSetPathIncrement:
@@ -151,7 +151,7 @@ class TestSetPathIncrement:
         path1, path2 = path.increment()
 
         # Modifying one shouldn't affect the other
-        path1._entries.append(SetPath.PathEntry(score=SetScore(2, 0, False, DEFAULT_FORMAT), playerToServe=1))
+        path1._entries.append(SetPath.PathEntry(score=SetScore(2, 0, False, DEFAULT_FORMAT), playerServing=1))
         assert len(path2.scoreHistory) == 2
 
     def test_increment_alternates_server(self):
@@ -161,12 +161,12 @@ class TestSetPathIncrement:
         path1, path2 = path.increment()
 
         # After first game, server should switch to player 2
-        assert path1.scoreHistory[-1].playerToServe == 2
-        assert path2.scoreHistory[-1].playerToServe == 2
+        assert path1.scoreHistory[-1].playerServing == 2
+        assert path2.scoreHistory[-1].playerServing == 2
 
         # After second game, server should switch back to player 1
         path1a, _ = path1.increment()
-        assert path1a.scoreHistory[-1].playerToServe == 1
+        assert path1a.scoreHistory[-1].playerServing == 1
 
 
 class TestSetPathGenerateAllPaths:
@@ -402,4 +402,4 @@ class TestSetPathEdgeCases:
         # Server should alternate: 1, 2, 1, 2, 1, 2, 1
         expected_servers = [1, 2, 1, 2, 1, 2, 1]
         for i, entry in enumerate(love_path.scoreHistory):
-            assert entry.playerToServe == expected_servers[i]
+            assert entry.playerServing == expected_servers[i]

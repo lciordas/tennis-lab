@@ -22,11 +22,11 @@ class SetPath:
 
     Methods:
     --------
-    __init__(initialScore: SetScore, playerToServe: Literal[1,2])
+    __init__(initialScore: SetScore, playerServing: Literal[1,2])
        Initialize the path with its initial score.
     increment() -> tuple["SetPath", "SetPath"] | "SetPath"
         Extend the path by one game, with the result of the game being a win for either player.
-    generateAllPaths(initialScore: SetScore, playerToServe: Literal[1,2]) -> list["SetPath"]
+    generateAllPaths(initialScore: SetScore, playerServing: Literal[1,2]) -> list["SetPath"]
         Factory method generating all possible set score paths that start from a given initial score.
     __str__() -> str
         Returns a string representation of the score history.
@@ -35,9 +35,9 @@ class SetPath:
     # A "path entry" bundles together two items:
     #  + the set score (an instance of SetScore)
     #  + which player serves next game (1 or 2)
-    PathEntry = namedtuple('PathEntry', ('score', 'playerToServe'))
+    PathEntry = namedtuple('PathEntry', ('score', 'playerServing'))
 
-    def __init__(self, initialScore: SetScore, playerToServe: Literal[1, 2]):
+    def __init__(self, initialScore: SetScore, playerServing: Literal[1, 2]):
         """
         Initialize the path with its initial score.
 
@@ -45,23 +45,23 @@ class SetPath:
         -----------
         initialScore  - the starting score of the score progression (must not have a
                         game or tiebreak in progress)
-        playerToServe - which player is serving the next game
+        playerServing - which player is serving the next game
 
         Raises:
         -------
         ValueError - if initialScore is not a SetScore instance
         ValueError - if initialScore has a game or tiebreak in progress
-        ValueError - if playerToServe is not 1 or 2
+        ValueError - if playerServing is not 1 or 2
         """
         if not isinstance(initialScore, SetScore):
             raise ValueError("initialScore must be a SetScore instance.")
         if initialScore.gameInProgress or initialScore.tiebreakInProgress:
             raise ValueError("initialScore cannot have a game or tiebreak in progress.")
-        if not isinstance(playerToServe, int) or playerToServe not in [1, 2]:
-            raise ValueError("playerToServe must be 1 or 2")
+        if not isinstance(playerServing, int) or playerServing not in [1, 2]:
+            raise ValueError("playerServing must be 1 or 2")
 
         self._entries: list[SetPath.PathEntry] = [
-            SetPath.PathEntry(score=initialScore, playerToServe=playerToServe)
+            SetPath.PathEntry(score=initialScore, playerServing=playerServing)
         ]
 
     @property
@@ -91,29 +91,29 @@ class SetPath:
         nextScores = lastScore.nextGameScores()
 
         # in sets, serve alternates every game
-        playerServingNext = 3 - lastEntry.playerToServe
+        playerServingNext = 3 - lastEntry.playerServing
 
         # create two new paths, one for each possible outcome of the next game
         path1 = deepcopy(self)
-        path1._entries.append(SetPath.PathEntry(score=nextScores[0], playerToServe=playerServingNext))
+        path1._entries.append(SetPath.PathEntry(score=nextScores[0], playerServing=playerServingNext))
 
         path2 = deepcopy(self)
-        path2._entries.append(SetPath.PathEntry(score=nextScores[1], playerToServe=playerServingNext))
+        path2._entries.append(SetPath.PathEntry(score=nextScores[1], playerServing=playerServingNext))
 
         return path1, path2
 
     @staticmethod
     def generateAllPaths(initialScore: SetScore,
-                         playerToServe: Literal[1, 2]) -> list["SetPath"]:
+                         playerServing: Literal[1, 2]) -> list["SetPath"]:
         """
         Factory method generating all possible score paths that start from a given initial score.
 
         Parameters:
         -----------
         initialScore  - the starting score for all paths
-        playerToServe - which player is serving next game
+        playerServing - which player is serving next game
         """
-        seedPath = SetPath(initialScore, playerToServe)
+        seedPath = SetPath(initialScore, playerServing)
         return SetPath._extendPaths([seedPath])
 
     @staticmethod
@@ -162,10 +162,10 @@ class SetPath:
     def __str__(self) -> str:
         """
         Returns a string representation of the path, as a list of
-        tuples: (gamesP1, gamesP2, playerToServe).
+        tuples: (gamesP1, gamesP2, playerServing).
         """
         s = "["
         for entry in self._entries:
             p1, p2 = entry.score.games(pov=1)
-            s += str((p1, p2, entry.playerToServe)) + ", "
+            s += str((p1, p2, entry.playerServing)) + ", "
         return s[:-2] + "]"

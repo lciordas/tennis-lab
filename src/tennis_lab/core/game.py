@@ -30,7 +30,7 @@ class Game:
 
     Methods:
     --------
-    __init__(playerToServe, initScore=None, matchFormat=None)
+    __init__(playerServing, initScore=None, matchFormat=None)
         Initialize a game - any valid initial score may be specified.
     recordPoint(pointWinner)
         Updates the game state with the result of the next point.
@@ -43,7 +43,7 @@ class Game:
     """
 
     def __init__(self,
-                 playerToServe : Literal[1, 2],
+                 playerServing : Literal[1, 2],
                  initScore     : Optional[GameScore]   = None,
                  matchFormat   : Optional[MatchFormat] = None,
                 _shareInitScore: bool = False):
@@ -52,7 +52,7 @@ class Game:
 
         Parameters:
         -----------
-        playerToServe  - which player serves this game (1 or 2)
+        playerServing  - which player serves this game (1 or 2)
         initScore      - initial game score; if None, the score is initialized to 0-0
         matchFormat    - match format; required if 'initScore' is None, otherwise optional
        _shareInitScore - whether to share the initScore object (use default value unless
@@ -62,8 +62,8 @@ class Game:
         -------
         ValueError - if inputs are invalid or inconsistent
         """
-        if playerToServe not in (1, 2):
-            raise ValueError(f"Invalid playerToServe: {playerToServe}. Must be 1 or 2.")
+        if playerServing not in (1, 2):
+            raise ValueError(f"Invalid playerServing: {playerServing}. Must be 1 or 2.")
         if initScore is not None and not isinstance(initScore, GameScore):
             raise ValueError(f"Invalid initScore: must be None or a GameScore instance.")
         if matchFormat is not None and not isinstance(matchFormat, MatchFormat):
@@ -80,10 +80,10 @@ class Game:
 
         self.score       : GameScore              = scoreStart        # keeps track of the current score
         self.pointHistory: List[Literal[1,2]]     = []                # which player won each point following 'initScore'
-        self.server      : Literal[1,2]           = playerToServe     # which player serves this game
+        self.server      : Literal[1,2]           = playerServing     # which player serves this game
 
         # string representation of the score history
-        self._scoreHistory: str = (f"P{playerToServe} serves\nP{playerToServe} "
+        self._scoreHistory: str = (f"P{playerServing} serves\nP{playerServing} "
                                    f"score: {self.score.asTraditional(self.server)}, ")
 
     @property
@@ -137,7 +137,7 @@ class Game:
         String representation for debugging.
         Note: eval(repr(game)) recreates the game at its current score, but not the full point history.
         """
-        return f"Game(playerToServe={self.server}, initScore={repr(self.score)})"
+        return f"Game(playerServing={self.server}, initScore={repr(self.score)})"
 
     def __str__(self) -> str:
         """
