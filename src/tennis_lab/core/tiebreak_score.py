@@ -40,7 +40,7 @@ class TiebreakScore:
         Returns the score in "X-Y" format from Player 1's perspective.
     """
 
-    def __init__(self, pointsP1: int, pointsP2: int, isSuper: bool, matchFormat: MatchFormat):
+    def __init__(self, pointsP1: int, pointsP2: int, isSuper: bool, matchFormat: Optional[MatchFormat] = None):
         """
         Initialize the score to an arbitrary (but valid) initial value.
 
@@ -49,7 +49,7 @@ class TiebreakScore:
         pointsP1    - initial number of points for Player1
         pointsP2    - initial number of points for Player2
         isSuper     - True if this is a super-tiebreak
-        matchFormat - describes the match format
+        matchFormat - describes the match format (default: MatchFormat with default arguments)
 
         Raises:
         -------
@@ -57,6 +57,8 @@ class TiebreakScore:
         """
         if not isinstance(isSuper, bool):
             raise ValueError(f"Invalid isSuper: {isSuper}. Must be a boolean.")
+        if matchFormat is None:
+            matchFormat = MatchFormat()
         if not isinstance(matchFormat, MatchFormat):
             raise ValueError(f"Invalid matchFormat: must be a MatchFormat instance.")
         if not TiebreakScore._isValidScore((pointsP1, pointsP2), isSuper):
