@@ -3,7 +3,7 @@
 import pytest
 import math
 from tennis_lab.paths.tiebreak_path import TiebreakPath
-from tennis_lab.paths.tiebreak_probability import pathProbability, probabilityP1WinsTiebreak, _probabilityP1WinsTie
+from tennis_lab.paths.tiebreak_probability import pathProbability, probabilityP1WinsTiebreak, _probabilityP1WinsTie, loadCachedFunction
 from tennis_lab.core.tiebreak_score import TiebreakScore
 from tennis_lab.core.match_format import MatchFormat
 
@@ -467,3 +467,240 @@ class TestProbabilityP1WinsTiebreakProbabilitySum:
 
         # P2 wins = 1 - P1 wins
         assert math.isclose(prob_p1_wins + (1 - prob_p1_wins), 1.0, rel_tol=1e-9)
+
+
+# =============================================================================
+# Tests for loadCachedFunction
+# =============================================================================
+
+class TestLoadCachedFunctionValidation:
+    """Tests for loadCachedFunction input validation."""
+
+    def test_invalid_init_score_type(self):
+        with pytest.raises(ValueError, match="initScore must be a TiebreakScore"):
+            loadCachedFunction("not a score", 1)
+
+    def test_invalid_init_score_none(self):
+        with pytest.raises(ValueError, match="initScore must be a TiebreakScore"):
+            loadCachedFunction(None, 1)
+
+    def test_invalid_player_serving_zero(self):
+        ts = TiebreakScore(0, 0, False, DEFAULT_FORMAT)
+        with pytest.raises(ValueError, match="playerServing must be 1 or 2"):
+            loadCachedFunction(ts, 0)
+
+    def test_invalid_player_serving_three(self):
+        ts = TiebreakScore(0, 0, False, DEFAULT_FORMAT)
+        with pytest.raises(ValueError, match="playerServing must be 1 or 2"):
+            loadCachedFunction(ts, 3)
+
+    def test_invalid_player_serving_string(self):
+        ts = TiebreakScore(0, 0, False, DEFAULT_FORMAT)
+        with pytest.raises(ValueError, match="playerServing must be 1 or 2"):
+            loadCachedFunction(ts, "1")
+
+
+class TestLoadCachedFunctionBehavior:
+    """Tests for loadCachedFunction behavior (skip if cache unavailable)."""
+
+    def test_returns_callable_or_none(self):
+        """Function should return a callable or None."""
+        ts = TiebreakScore(0, 0, False, DEFAULT_FORMAT)
+        result = loadCachedFunction(ts, 1)
+        assert result is None or callable(result)
+
+    def test_cached_function_returns_float(self):
+        """If cache available, returned function should return a float."""
+        ts = TiebreakScore(0, 0, False, DEFAULT_FORMAT)
+        cached_fn = loadCachedFunction(ts, 1)
+        if cached_fn is None:
+            pytest.skip("Cached data not available")
+        result = cached_fn(0.65, 0.60)
+        assert isinstance(result, float)
+
+    def test_cached_function_matches_direct_calculation(self):
+        """Cached function should match direct probabilityP1WinsTiebreak calculation."""
+        ts = TiebreakScore(0, 0, False, DEFAULT_FORMAT)
+        cached_fn = loadCachedFunction(ts, 1)
+        if cached_fn is None:
+            pytest.skip("Cached data not available")
+
+        p1, p2 = 0.65, 0.60
+        cached_result = cached_fn(p1, p2)
+        direct_result = probabilityP1WinsTiebreak(ts, 1, p1, p2)
+        # Allow some tolerance due to interpolation
+        assert math.isclose(cached_result, direct_result, rel_tol=0.01)
+
+    def test_cached_function_from_3_2(self):
+        """Test cached function from 3-2 score."""
+        ts = TiebreakScore(3, 2, False, DEFAULT_FORMAT)
+        cached_fn = loadCachedFunction(ts, 1)
+        if cached_fn is None:
+            pytest.skip("Cached data not available")
+
+        p1, p2 = 0.60, 0.65
+        cached_result = cached_fn(p1, p2)
+        direct_result = probabilityP1WinsTiebreak(ts, 1, p1, p2)
+        assert math.isclose(cached_result, direct_result, rel_tol=0.01)
+
+    def test_cached_function_from_deuce(self):
+        """Test cached function from deuce (6-6)."""
+        ts = TiebreakScore(6, 6, False, DEFAULT_FORMAT)
+        cached_fn = loadCachedFunction(ts, 1)
+        if cached_fn is None:
+            pytest.skip("Cached data not available")
+
+        p1, p2 = 0.65, 0.60
+        cached_result = cached_fn(p1, p2)
+        direct_result = probabilityP1WinsTiebreak(ts, 1, p1, p2)
+        assert math.isclose(cached_result, direct_result, rel_tol=0.01)
+
+    def test_cached_function_from_extended_deuce(self):
+        """Test that extended deuce (8-8) is capped to 6-6 and works correctly."""
+        ts_extended = TiebreakScore(8, 8, False, DEFAULT_FORMAT)
+        ts_capped = TiebreakScore(6, 6, False, DEFAULT_FORMAT)
+
+        cached_fn_extended = loadCachedFunction(ts_extended, 1)
+        cached_fn_capped = loadCachedFunction(ts_capped, 1)
+
+        if cached_fn_extended is None or cached_fn_capped is None:
+            pytest.skip("Cached data not available")
+
+        p1, p2 = 0.65, 0.60
+        # Both should return the same result since 8-8 is capped to 6-6
+        assert math.isclose(cached_fn_extended(p1, p2), cached_fn_capped(p1, p2), rel_tol=1e-9)
+
+    def test_cached_function_advantage_capped(self):
+        """Test that advantage scores (7-6, 8-7, etc.) are capped to 6-5."""
+        ts_adv = TiebreakScore(7, 6, False, DEFAULT_FORMAT)
+        ts_capped = TiebreakScore(6, 5, False, DEFAULT_FORMAT)
+
+        cached_fn_adv = loadCachedFunction(ts_adv, 1)
+        cached_fn_capped = loadCachedFunction(ts_capped, 1)
+
+        if cached_fn_adv is None or cached_fn_capped is None:
+            pytest.skip("Cached data not available")
+
+        p1, p2 = 0.65, 0.60
+        # 7-6 should be capped to 6-5
+        assert math.isclose(cached_fn_adv(p1, p2), cached_fn_capped(p1, p2), rel_tol=1e-9)
+
+    def test_cached_function_advantage_p2_capped(self):
+        """Test that P2 advantage scores (6-7, 7-8, etc.) are capped to 5-6."""
+        ts_adv = TiebreakScore(6, 7, False, DEFAULT_FORMAT)
+        ts_capped = TiebreakScore(5, 6, False, DEFAULT_FORMAT)
+
+        cached_fn_adv = loadCachedFunction(ts_adv, 1)
+        cached_fn_capped = loadCachedFunction(ts_capped, 1)
+
+        if cached_fn_adv is None or cached_fn_capped is None:
+            pytest.skip("Cached data not available")
+
+        p1, p2 = 0.65, 0.60
+        # 6-7 should be capped to 5-6
+        assert math.isclose(cached_fn_adv(p1, p2), cached_fn_capped(p1, p2), rel_tol=1e-9)
+
+    def test_cached_function_player2_serving(self):
+        """Test cached function when player 2 is serving."""
+        ts = TiebreakScore(2, 3, False, DEFAULT_FORMAT)
+        cached_fn = loadCachedFunction(ts, 2)
+        if cached_fn is None:
+            pytest.skip("Cached data not available")
+
+        p1, p2 = 0.60, 0.65
+        cached_result = cached_fn(p1, p2)
+        direct_result = probabilityP1WinsTiebreak(ts, 2, p1, p2)
+        assert math.isclose(cached_result, direct_result, rel_tol=0.01)
+
+    def test_cached_probability_bounds(self):
+        """Cached probability should be between 0 and 1."""
+        ts = TiebreakScore(0, 0, False, DEFAULT_FORMAT)
+        cached_fn = loadCachedFunction(ts, 1)
+        if cached_fn is None:
+            pytest.skip("Cached data not available")
+
+        for p1 in [0.3, 0.5, 0.7]:
+            for p2 in [0.3, 0.5, 0.7]:
+                result = cached_fn(p1, p2)
+                assert 0.0 <= result <= 1.0
+
+    def test_cached_function_equal_probs_gives_half(self):
+        """With equal serve probs, cached function should give ~0.5."""
+        ts = TiebreakScore(0, 0, False, DEFAULT_FORMAT)
+        cached_fn = loadCachedFunction(ts, 1)
+        if cached_fn is None:
+            pytest.skip("Cached data not available")
+
+        result = cached_fn(0.65, 0.65)
+        assert math.isclose(result, 0.5, rel_tol=0.01)
+
+
+class TestLoadCachedFunctionSuperTiebreak:
+    """Tests for loadCachedFunction with super-tiebreaks (skip slow direct calculations)."""
+
+    def test_super_returns_callable_or_none(self):
+        """Super-tiebreak function should return a callable or None."""
+        ts = TiebreakScore(0, 0, True, DEFAULT_FORMAT)
+        result = loadCachedFunction(ts, 1)
+        assert result is None or callable(result)
+
+    def test_super_cached_function_returns_float(self):
+        """If super-tiebreak cache available, returned function should return a float."""
+        ts = TiebreakScore(0, 0, True, DEFAULT_FORMAT)
+        cached_fn = loadCachedFunction(ts, 1)
+        if cached_fn is None:
+            pytest.skip("Super-tiebreak cached data not available")
+        result = cached_fn(0.65, 0.60)
+        assert isinstance(result, float)
+
+    def test_super_cached_probability_bounds(self):
+        """Super-tiebreak cached probability should be between 0 and 1."""
+        ts = TiebreakScore(0, 0, True, DEFAULT_FORMAT)
+        cached_fn = loadCachedFunction(ts, 1)
+        if cached_fn is None:
+            pytest.skip("Super-tiebreak cached data not available")
+
+        for p1 in [0.3, 0.5, 0.7]:
+            for p2 in [0.3, 0.5, 0.7]:
+                result = cached_fn(p1, p2)
+                assert 0.0 <= result <= 1.0
+
+    def test_super_cached_equal_probs_gives_half(self):
+        """With equal serve probs, super-tiebreak cached function should give ~0.5."""
+        ts = TiebreakScore(0, 0, True, DEFAULT_FORMAT)
+        cached_fn = loadCachedFunction(ts, 1)
+        if cached_fn is None:
+            pytest.skip("Super-tiebreak cached data not available")
+
+        result = cached_fn(0.65, 0.65)
+        assert math.isclose(result, 0.5, rel_tol=0.01)
+
+    def test_super_extended_deuce_capped(self):
+        """Test that super-tiebreak extended deuce (11-11) is capped to 9-9."""
+        ts_extended = TiebreakScore(11, 11, True, DEFAULT_FORMAT)
+        ts_capped = TiebreakScore(9, 9, True, DEFAULT_FORMAT)
+
+        cached_fn_extended = loadCachedFunction(ts_extended, 1)
+        cached_fn_capped = loadCachedFunction(ts_capped, 1)
+
+        if cached_fn_extended is None or cached_fn_capped is None:
+            pytest.skip("Super-tiebreak cached data not available")
+
+        p1, p2 = 0.65, 0.60
+        # 11-11 should be capped to 9-9
+        assert math.isclose(cached_fn_extended(p1, p2), cached_fn_capped(p1, p2), rel_tol=1e-9)
+
+    def test_super_advantage_capped(self):
+        """Test that super-tiebreak advantage (10-9) is capped to 9-8."""
+        ts_adv = TiebreakScore(10, 9, True, DEFAULT_FORMAT)
+        ts_capped = TiebreakScore(9, 8, True, DEFAULT_FORMAT)
+
+        cached_fn_adv = loadCachedFunction(ts_adv, 1)
+        cached_fn_capped = loadCachedFunction(ts_capped, 1)
+
+        if cached_fn_adv is None or cached_fn_capped is None:
+            pytest.skip("Super-tiebreak cached data not available")
+
+        p1, p2 = 0.65, 0.60
+        # 10-9 should be capped to 9-8
+        assert math.isclose(cached_fn_adv(p1, p2), cached_fn_capped(p1, p2), rel_tol=1e-9)

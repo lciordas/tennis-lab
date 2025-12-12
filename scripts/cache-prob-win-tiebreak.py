@@ -69,12 +69,23 @@ initScores       = initScoresInter + initScoresP1Won + initScoresP1Lost
 iteration = 0
 for playerServing in (1, 2):
     for (pointsP1, pointsP2) in initScores:
+        
+        # log progress
         iteration += 1
-        print(f"\r[{iteration:3d}/{2 * len(initScores):3d}] P{playerServing} serving, score ({pointsP1}, {pointsP2})...", end="", flush=True)
+        prefix = f"\r[{iteration:3d}/{2 * len(initScores):3d}] P{playerServing} serving, score ({pointsP1}, {pointsP2})..."
+        print(prefix, end="", flush=True)
+        
         score = TiebreakScore(pointsP1, pointsP2, IS_SUPER)
 
         if (pointsP1, pointsP2) in initScoresInter:
-            ProbWinTB = [[probabilityP1WinsTiebreak(score, playerServing, p1, p2) for p2 in P2s] for p1 in P1s]
+            ProbWinTB = []
+            for i, p1 in enumerate(P1s):
+                row = []
+                for j, p2 in enumerate(P2s):
+                    cellNum = i * GRID_SZ + j + 1
+                    print(f"{prefix} {cellNum:4d}/{GRID_SZ**2}", end="", flush=True)
+                    row.append(probabilityP1WinsTiebreak(score, playerServing, p1, p2))
+                ProbWinTB.append(row)
         elif (pointsP1, pointsP2) in initScoresP1Won:
             ProbWinTB = [[1.0 for p2 in P2s] for p1 in P1s]
         elif (pointsP1, pointsP2) in initScoresP1Lost:
