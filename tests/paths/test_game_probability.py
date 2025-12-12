@@ -10,6 +10,7 @@ from tennis_lab.core.match_format import MatchFormat
 # Default match formats for tests
 DEFAULT_FORMAT = MatchFormat(bestOfSets=3)
 NO_AD_FORMAT = MatchFormat(bestOfSets=3, noAdRule=True)
+NO_CAP_FORMAT = MatchFormat(bestOfSets=3, capPoints=False)
 
 
 # =============================================================================
@@ -398,7 +399,8 @@ class TestProbabilityServerWinsGameFinalScores:
 
     def test_advantage_receiver(self):
         """Receiver at advantage (3-4): low but not zero chance."""
-        gs = GameScore(3, 4, DEFAULT_FORMAT)
+        # Use NO_CAP_FORMAT so the deuce formula applies (standard tennis scoring)
+        gs = GameScore(3, 4, NO_CAP_FORMAT)
         p = 0.6
         prob = probabilityServerWinsGame(gs, 1, p)
         # Not final yet - server must win point to get back to deuce

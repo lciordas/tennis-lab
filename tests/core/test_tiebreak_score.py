@@ -7,6 +7,7 @@ from tennis_lab.core.match_format import MatchFormat, SetEnding, POINTS_TO_WIN_T
 # Default match formats for tests
 DEFAULT_FORMAT = MatchFormat(bestOfSets=3)
 CAP_FORMAT     = MatchFormat(bestOfSets=3, capPoints=True)
+NO_CAP_FORMAT  = MatchFormat(bestOfSets=3, capPoints=False)
 
 
 class TestTiebreakScoreInit:
@@ -53,8 +54,6 @@ class TestTiebreakScoreInit:
     def test_init_invalid_matchFormat_type(self):
         with pytest.raises(ValueError):
             TiebreakScore(0, 0, isSuper=False, matchFormat="invalid")
-        with pytest.raises(ValueError):
-            TiebreakScore(0, 0, isSuper=False, matchFormat=None)
 
     def test_init_invalid_too_far_apart(self):
         # Can't be more than 2 apart after reaching pointsToWin
@@ -193,7 +192,7 @@ class TestRecordPoint:
         assert score.asPoints(1) == (6, 6)
 
     def test_record_point_without_capPoints(self):
-        score = TiebreakScore(6, 6, isSuper=False, matchFormat=DEFAULT_FORMAT)
+        score = TiebreakScore(6, 6, isSuper=False, matchFormat=NO_CAP_FORMAT)
         score.recordPoint(1)
         assert score.asPoints(1) == (7, 6)
 

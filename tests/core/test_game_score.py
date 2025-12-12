@@ -4,10 +4,11 @@ import pytest
 from tennis_lab.core.game_score   import GameScore
 from tennis_lab.core.match_format import MatchFormat, SetEnding
 
-# Default match format for most tests
+# Default match format for most tests (capPoints=True is the default)
 DEFAULT_FORMAT = MatchFormat(bestOfSets=3)
 NO_AD_FORMAT   = MatchFormat(bestOfSets=3, noAdRule=True)
 CAP_FORMAT     = MatchFormat(bestOfSets=3, capPoints=True)
+NO_CAP_FORMAT  = MatchFormat(bestOfSets=3, capPoints=False)
 
 
 class TestGameScoreInit:
@@ -164,7 +165,7 @@ class TestRecordPoint:
         assert score.asPoints(1) == (3, 3)
 
     def test_record_point_without_capPoints(self):
-        score = GameScore(3, 3, DEFAULT_FORMAT)
+        score = GameScore(3, 3, NO_CAP_FORMAT)
         score.recordPoint(1)
         assert score.asPoints(1) == (4, 3)
 
@@ -203,9 +204,9 @@ class TestAsTraditional:
         assert GameScore(3, 2, DEFAULT_FORMAT).asTraditional(1) == "40-30"
 
     def test_deuce(self):
-        # 3-3 is 40-40, only 4-4+ is displayed as "deuce"
+        # 3-3 is 40-40, only 4-4+ is displayed as "deuce" (requires capPoints=False)
         assert GameScore(3, 3, DEFAULT_FORMAT).asTraditional(1) == "40-40"
-        assert GameScore(4, 4, DEFAULT_FORMAT).asTraditional(1) == "deuce"
+        assert GameScore(4, 4, NO_CAP_FORMAT).asTraditional(1) == "deuce"
 
     def test_advantage(self):
         assert GameScore(4, 3, DEFAULT_FORMAT).asTraditional(1) == "ad-40"
@@ -308,7 +309,7 @@ class TestReprAndStr:
         assert str(GameScore(0, 0, DEFAULT_FORMAT)) == "0-0"
         assert str(GameScore(2, 1, DEFAULT_FORMAT)) == "30-15"
         assert str(GameScore(3, 3, DEFAULT_FORMAT)) == "40-40"
-        assert str(GameScore(4, 4, DEFAULT_FORMAT)) == "deuce"
+        assert str(GameScore(4, 4, NO_CAP_FORMAT)) == "deuce"
         assert str(GameScore(4, 3, DEFAULT_FORMAT)) == "ad-40"
 
 
