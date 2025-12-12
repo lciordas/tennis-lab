@@ -5,9 +5,12 @@ Functions:
 ----------
 pathProbability           - probability that a given score path occurs during a tiebreak
 probabilityP1WinsTiebreak - probability that P1 wins the tiebreak from a given score
+loadCachedFunction        - loads a cached version of probabilityP1WinsTiebreak
 """
 
-from typing import Literal
+import os, pickle
+from copy import deepcopy
+from typing import Callable, Literal, Optional
 from tennis_lab.paths.tiebreak_path import TiebreakPath
 from tennis_lab.core.tiebreak_score import TiebreakScore
 
@@ -162,3 +165,65 @@ def _probabilityP1WinsTie(probWinPointP1: float,
     num = probWinPointP1 * (1 - probWinPointP2)
     den = 1 - probWinPointP1 * probWinPointP2 - (1 - probWinPointP1) * (1 - probWinPointP2)
     return num / den
+
+def loadCachedFunction(initScore    : TiebreakScore,
+                       playerServing: Literal[1, 2]) -> Optional[Callable[[float, float], float]]:
+    """
+    Loads a cached version of 'probabilityP1WinsTiebreak()'.
+
+    Evaluating 'probabilityP1WinsTiebreak(...)' can be expensive, especially when called repeatedly,
+    because it iterates over all possible score progressions. To avoid repeating this computation,
+    the script 'scripts/cache-prob-win-tiebreak.py' pre-computes and caches the P1's tiebreak-winning
+    probability for every possible starting score and across a grid of point-winning probabilities.
+    A 2-D interpolator is constructed from this grid and saved as a callable, which is loaded and
+    returned by this function.
+
+    Parameters:
+    -----------
+    initScore     - the initial score in the tiebreak
+    playerServing - which player is serving the next point (1 or 2)
+
+    Returns:
+    --------
+    A callable that takes two float arguments (the probability that P1 wins a point when serving,
+    and the probability that P2 wins a point when serving) and returns the probability that P1
+    wins the tiebreak from the given initial score.
+    Returns None if the cached function is not available.
+
+    Example:
+    --------
+    f = loadCachedFunction(TiebreakScore(0, 0, False), playerServing=1)
+    prob_win_tiebreak = f(0.65, 0.60)  # P1 wins 65% on serve, P2 wins 60% on serve
+    """
+    if not isinstance(initScore, TiebreakScore):
+        raise ValueError("initScore must be a TiebreakScore instance")
+    if not isinstance(playerServing, int) or playerServing not in [1, 2]:
+        raise ValueError("playerServing must be 1 or 2")
+
+    # Cap the score to normalize deuces & advantages (e.g., 8-8 → 6-6)
+    cappedScore = deepcopy(initScore)
+    cappedScore._cap_score()
+    pointsP1, pointsP2 = cappedScore.asPoints(pov=1)
+
+    # Further adjust advantages: _cap_score() gives 7-6/6-7, but cache has only 6-5/5-6
+    pointsToWin = cappedScore.pointsToWin
+    if pointsP1 == pointsToWin and pointsP2 == pointsToWin - 1:
+        pointsP1, pointsP2 = pointsToWin - 1, pointsToWin - 2  # 7-6 → 6-5 (or 10-9 → 9-8)
+    elif pointsP2 == pointsToWin and pointsP1 == pointsToWin - 1:
+        pointsP1, pointsP2 = pointsToWin - 2, pointsToWin - 1  # 6-7 → 5-6 (or 9-10 → 8-9)
+
+    # Build the filename based on the score
+    fileName = f"prob_win_tbreak{pointsToWin}_P{playerServing}_{pointsP1}{pointsP2}.pkl"
+
+    # Build the filepath
+    DIRPATH = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data-cache')
+    filePath = os.path.join(DIRPATH, fileName)
+
+    try:
+        with open(filePath, "rb") as fh:
+            probP1WinTBreakInterpFunction = pickle.load(fh)
+            def wrapper(p1: float, p2: float) -> float:
+                return probP1WinTBreakInterpFunction(p1, p2).item()
+            return wrapper
+    except Exception:
+        return None
