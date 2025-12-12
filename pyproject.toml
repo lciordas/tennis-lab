@@ -40,8 +40,8 @@ notebooks = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/tennis-lab"
-Repository = "https://github.com/yourusername/tennis-lab"
+Homepage = "https://github.com/lciordas/tennis-lab"
+Repository = "https://github.com/lciordas/tennis-lab"
 
 [tool.setuptools.packages.find]
 where = ["src"]
