@@ -29,7 +29,7 @@ class MatchScore:
 
     Methods:
     --------
-    __init__(setsP1: int, setsP2: int, matchFormat: MatchFormat,
+    __init__(setsP1: int, setsP2: int, matchFormat: Optional[MatchFormat]=None,
              setScore: Optional[SetScore]=None)
         Initialize the score to an arbitrary (but valid) initial value.
     sets(pov: Literal[1,2]) -> tuple[int, int]
@@ -49,8 +49,8 @@ class MatchScore:
     def __init__(self,
                  setsP1     : int,
                  setsP2     : int,
-                 matchFormat: MatchFormat,
-                 setScore   : Optional[SetScore] = None):
+                 matchFormat: Optional[MatchFormat] = None,
+                 setScore   : Optional[SetScore]    = None):
         """
         Initialize the score to an arbitrary (but valid) initial value.
 
@@ -58,26 +58,35 @@ class MatchScore:
         -----------
         setsP1      - initial number of sets won by Player1
         setsP2      - initial number of sets won by Player2
-        matchFormat - describes the match format
+        matchFormat - describes the match format (can be derived from setScore if not provided)
         setScore    - initial current set score (only if initially in the middle of a set)
 
         Raises:
         -------
-        ValueError - if any of the inputs are invalid
+        ValueError - if any of the inputs are invalid or if matchFormats are inconsistent
         """
         # validate inputs
         if not isinstance(setsP1, int) or not isinstance(setsP2, int):
             raise ValueError(f"Invalid sets: setsP1={setsP1}, setsP2={setsP2}. Must be integers.")
-        if not isinstance(matchFormat, MatchFormat):
-            raise ValueError(f"Invalid matchFormat: must be a MatchFormat instance.")
-        if matchFormat.bestOfSets is None:
-            raise ValueError("matchFormat.bestOfSets must be specified for MatchScore.")
+        if matchFormat is not None and not isinstance(matchFormat, MatchFormat):
+            raise ValueError(f"Invalid matchFormat: must be None or a MatchFormat instance.")
         if setScore is not None and not isinstance(setScore, SetScore):
             raise ValueError(f"Invalid setScore: must be None or a SetScore instance.")
         if setScore is not None and setScore.isFinal:
             raise ValueError(f"Invalid setScore: cannot be a final score (should be part of setsP1/setsP2).")
+
+        # Derive matchFormat from setScore if not provided directly
+        if matchFormat is None:
+            if setScore is not None:
+                matchFormat = setScore._matchFormat
+            else:
+                matchFormat = MatchFormat()
+
+        # Validate that all provided matchFormats are consistent
         if setScore is not None and setScore._matchFormat != matchFormat:
             raise ValueError("setScore.matchFormat must match matchFormat.")
+        if matchFormat.bestOfSets is None:
+            raise ValueError("matchFormat.bestOfSets must be specified for MatchScore.")
         if not MatchScore._isValidScore(setsP1, setsP2, setScore, matchFormat):
             raise ValueError(f"Invalid initial score: {setsP1}-{setsP2}")
 

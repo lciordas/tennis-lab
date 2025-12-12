@@ -108,6 +108,17 @@ class TestMatchScoreInit:
         # MatchScore should be unaffected
         assert score.currSetScore.currGameScore.isBlank
 
+    def test_init_matchFormat_from_setScore(self):
+        # matchFormat is derived from setScore when not provided
+        set_score = SetScore(3, 2, False, BEST_OF_5)
+        score = MatchScore(1, 0, setScore=set_score)
+        assert score._matchFormat == BEST_OF_5
+
+    def test_init_default_matchFormat_requires_bestOfSets(self):
+        # default MatchFormat has no bestOfSets, so should raise
+        with pytest.raises(ValueError, match="bestOfSets must be specified"):
+            MatchScore(0, 0)
+
 
 class TestMatchScoreProperties:
     """Tests for MatchScore properties."""
