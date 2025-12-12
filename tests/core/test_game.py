@@ -40,9 +40,17 @@ class TestGameInit:
         with pytest.raises(ValueError):
             Game(playerServing=1, initScore="invalid", matchFormat=DEFAULT_FORMAT)
 
-    def test_init_missing_matchFormat(self):
-        with pytest.raises(ValueError):
-            Game(playerServing=1)
+    def test_init_default_matchFormat(self):
+        # When both initScore and matchFormat are None, a default MatchFormat is used
+        game = Game(playerServing=1)
+        assert game.server == 1
+        assert game.score.asPoints(1) == (0, 0)
+        assert not game.isOver
+        # Verify it uses standard scoring (not no-ad)
+        game.recordPoints([1, 1, 1, 2, 2, 2])  # Get to deuce
+        assert game.score.isDeuce
+        game.recordPoint(1)  # Advantage
+        assert not game.isOver  # Should need 2 points to win from deuce
 
     def test_init_mismatched_matchFormat(self):
         init_score = GameScore(2, 1, DEFAULT_FORMAT)

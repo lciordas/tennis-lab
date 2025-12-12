@@ -12,6 +12,7 @@ class Game:
     The game need not start at 0-0; any valid initial score may be specified via
     the 'initScore' parameter. Scoring rules (standard or 'no-ad') are determined by
     the 'matchFormat' parameter or, if 'initScore' is provided, by its match format.
+    If neither is provided, a default MatchFormat is used.
 
     Attributes:
     -----------
@@ -54,7 +55,7 @@ class Game:
         -----------
         playerServing  - which player serves this game (1 or 2)
         initScore      - initial game score; if None, the score is initialized to 0-0
-        matchFormat    - match format; required if 'initScore' is None, otherwise optional
+        matchFormat    - describes the match format (if not provided the match format from 'initScore' is used, if available)
        _shareInitScore - whether to share the initScore object (use default value unless
                          you know what you are doing)
 
@@ -68,8 +69,6 @@ class Game:
             raise ValueError(f"Invalid initScore: must be None or a GameScore instance.")
         if matchFormat is not None and not isinstance(matchFormat, MatchFormat):
             raise ValueError(f"Invalid matchFormat: must be None or a MatchFormat instance.")
-        if initScore is None and matchFormat is None:
-            raise ValueError("matchFormat is required when initScore is None.")
         if initScore is not None and matchFormat is not None:
             if initScore._matchFormat != matchFormat:
                 raise ValueError("initScore.matchFormat must match matchFormat.")
