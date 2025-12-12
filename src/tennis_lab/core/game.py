@@ -26,6 +26,8 @@ class Game:
         Which player won the game (1 or 2, but 'None' if the game is not over)
     scoreHistory: str
         Formatted string representation of the game score history.
+    matchFormat: MatchFormat
+        The match format for this game.
     pointHistory: list[Literal[1,2]]
         Which player won each point (following the initial score); ex: [1, 1, 2, 1, 1]
 
@@ -99,6 +101,11 @@ class Game:
     def scoreHistory(self) -> str:
         """Formatted string representation of the game score history, server score is displayed first."""
         return self._scoreHistory[:-2]
+
+    @property
+    def matchFormat(self) -> MatchFormat:
+        """The match format for this game."""
+        return self.score._matchFormat
 
     def recordPoint(self, pointWinner: Literal[1, 2]):
         """

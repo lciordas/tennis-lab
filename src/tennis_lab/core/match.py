@@ -35,6 +35,8 @@ class Match:
         The sets that have been completed so far in this match.
     pointHistory: list[Literal[1,2]]
         Which player won each point ex: [1, 1, 2, ...]
+    matchFormat: MatchFormat
+        The match format for this match.
 
     Methods:
     --------
@@ -139,6 +141,11 @@ class Match:
         if self.currentSet is not None:
             points.append(self.currentSet.totalPoints)
         return sum([p[0] for p in points]), sum([p[1] for p in points])
+
+    @property
+    def matchFormat(self) -> MatchFormat:
+        """The match format for this match."""
+        return self._matchFormat
 
     def recordPoint(self, pointWinner: Literal[1, 2]):
         """

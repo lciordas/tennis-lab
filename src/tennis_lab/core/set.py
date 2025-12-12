@@ -36,6 +36,8 @@ class Set:
         The tiebreaker in progress (if any).
     totalPoints: tuple[int, int]
         Current total # points won in this set by each player.
+    matchFormat: MatchFormat
+        The match format for this set.
     gameHistory: list[Game|Tiebreak]
         The games that have been completed so far (including the tiebreaker) in this set.
     pointHistory: list[Literal[1,2]]
@@ -186,6 +188,11 @@ class Set:
             total2 += self.tiebreaker.score.asPoints(pov=2)[0]
 
         return total1, total2
+
+    @property
+    def matchFormat(self) -> MatchFormat:
+        """The match format for this set."""
+        return self._matchFormat
 
     def recordPoint(self, pointWinner: Literal[1, 2]):
         """

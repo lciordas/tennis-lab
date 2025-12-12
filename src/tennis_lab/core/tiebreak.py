@@ -28,6 +28,8 @@ class Tiebreak:
         Formatted string representation of the tiebreak score history.
     pointHistory: list[Literal[1,2]]
         Which player won each point (following the initial score); ex: [1, 1, 2, 1, 1]
+    matchFormat: MatchFormat
+        The match format for this tiebreak.
 
     Methods:
     --------
@@ -109,6 +111,11 @@ class Tiebreak:
     def scoreHistory(self) -> str:
         """Formatted string representation of the tiebreak score history, server score is displayed first."""
         return self._scoreHistory[:-2]
+
+    @property
+    def matchFormat(self) -> MatchFormat:
+        """The match format for this tiebreak."""
+        return self.score._matchFormat
 
     def recordPoint(self, pointWinner: Literal[1, 2]):
         """
