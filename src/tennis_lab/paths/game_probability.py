@@ -152,7 +152,7 @@ def loadCachedFunction(initScore    : GameScore,
     if not isinstance(playerServing, int) or playerServing not in [1, 2]:
         raise ValueError("playerServing must be 1 or 2")
 
-    # Capped the score to normalize deuces & advantages (e.g., 5-5 → 3-3, 5-4 → 4-3) 
+    # Cap the score to normalize deuces & advantages (e.g., 5-5 → 3-3, 5-4 → 4-3) 
     # as we only have cached data for an init score of 3-3 (but not for 4-4, 5-5, 6-6,...)
     cappedScore = deepcopy(initScore)
     cappedScore._cap_score()
