@@ -65,9 +65,17 @@ class TestTiebreakInit:
         with pytest.raises(ValueError):
             Tiebreak(playerServing=1, initScore=init_score, isSuper=False)
 
-    def test_init_missing_matchFormat(self):
-        with pytest.raises(ValueError):
-            Tiebreak(playerServing=1, isSuper=False)
+    def test_init_default_matchFormat(self):
+        # When both initScore and matchFormat are None, a default MatchFormat is used
+        tb = Tiebreak(playerServing=1, isSuper=False)
+        assert tb.servesNext == 1
+        assert tb.score.asPoints(1) == (0, 0)
+        assert not tb.isOver
+        # Play to 7-0 to verify it's a standard tiebreak (not super)
+        for _ in range(7):
+            tb.recordPoint(1)
+        assert tb.isOver
+        assert tb.winner == 1
 
     def test_init_deep_copies_score(self):
         init_score = TiebreakScore(1, 0, isSuper=False, matchFormat=DEFAULT_FORMAT)

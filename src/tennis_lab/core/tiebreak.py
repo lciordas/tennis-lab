@@ -11,7 +11,8 @@ class Tiebreak:
 
     The tiebreak need not start at 0-0; any valid initial score may be specified via
     the 'initScore' parameter. Standard or super-tiebreak rules are determined by
-    the 'isSuper' parameter.
+    the 'isSuper' parameter. If neither initScore nor matchFormat is provided, a
+    default MatchFormat is used.
 
     Attributes:
     -----------
@@ -56,7 +57,7 @@ class Tiebreak:
         playerServing  - which player serves the next point in the tiebreak (1 or 2)
         isSuper        - True if this is a super-tiebreak
         initScore      - initial tiebreak score; if None, the score is initialized to 0-0
-        matchFormat    - describes the match format; required if 'initScore' is None
+        matchFormat    - describes the match format (if not provided the match format from 'initScore' is used, if available)
        _shareInitScore - whether to share the initScore object (use default value unless
                          you know what you are doing)
 
@@ -72,8 +73,8 @@ class Tiebreak:
             raise ValueError(f"Invalid isSuper: {isSuper}. Must be a boolean.")
         if matchFormat is not None and not isinstance(matchFormat, MatchFormat):
             raise ValueError(f"Invalid matchFormat: must be None or a MatchFormat instance.")
-        if initScore is None and matchFormat is None:
-            raise ValueError("matchFormat is required when initScore is None.")
+        # Note: when both initScore and matchFormat are None, we pass None to TiebreakScore,
+        # which will use a default MatchFormat internally
         if initScore is not None and initScore._isSuper != isSuper:
             raise ValueError(f"initScore.isSuper ({initScore._isSuper}) must match isSuper ({isSuper}).")
         if initScore is not None and matchFormat is not None:
