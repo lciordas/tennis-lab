@@ -9,7 +9,8 @@ from tennis_lab.core.set_score import SetScore
 class SetPath:
     """
     Represents a valid score progression in a tennis set, starting from a given initial score.
-    Provides tools for building all such score progressions.
+    The score progression ends when reaching a final score (one player wins) or when the set
+    is tied (6-6).
 
     NOTE: The score granularity along the path is games, not points. Each entry in the
     score history represents the set score after a complete game. The initial score

@@ -8,10 +8,10 @@ from tennis_lab.core.match_score import MatchScore
 class MatchPath:
     """
     Represents a valid score progression in a tennis match, starting from a given initial score.
-    Provides tools for building all such score progressions.
+    The score progression ends when reaching a final score (one player wins the match).
 
     NOTE: The score granularity along the path is sets, not games or points. Each entry in the
-    score history represents the match score after a complete set. The initial score cannot have 
+    score history represents the match score after a complete set. The initial score cannot have
     a set in progress.
 
     Attributes:

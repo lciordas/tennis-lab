@@ -9,7 +9,8 @@ from tennis_lab.core.tiebreak_score import TiebreakScore
 class TiebreakPath:
     """
     Represents a valid score progression in a tennis tiebreak, starting from a given initial score.
-    Provides tools for building all such score progressions.
+    The score progression ends when reaching a final score (one player wins) or when the tiebreak 
+    is tied (6-6 for regular tiebreaks, 9-9 for super-tiebreaks). 
 
     Attributes:
     -----------

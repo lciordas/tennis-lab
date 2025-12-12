@@ -7,7 +7,7 @@ from tennis_lab.core.game_score import GameScore
 class GamePath:
     """
     Represents a valid score progression in a tennis game, starting from a given initial score.
-    Provides tools for building all such score progressions.
+    The score progression ends when reaching a final score (one player wins) or at the first deuce.
 
     Attributes:
     -----------
