@@ -42,7 +42,7 @@ class SetScore:
 
     Methods:
     --------
-    __init__(gamesP1: int, gamesP2: int, isFinalSet: bool, matchFormat: MatchFormat,
+    __init__(gamesP1: int, gamesP2: int, isFinalSet: bool, matchFormat: Optional[MatchFormat]=None,
              gameScore: Optional[GameScore]=None, tiebreakScore: Optional[TiebreakScore]=None)
         Initialize the score to an arbitrary (but valid) initial value.
     games(pov: Literal[1,2]) -> tuple[int, int]
@@ -63,7 +63,7 @@ class SetScore:
                  gamesP1      : int,
                  gamesP2      : int,
                  isFinalSet   : bool,
-                 matchFormat  : MatchFormat,
+                 matchFormat  : Optional[MatchFormat]   = None,
                  gameScore    : Optional[GameScore]     = None,
                  tiebreakScore: Optional[TiebreakScore] = None):
         """
@@ -74,20 +74,20 @@ class SetScore:
         gamesP1       - initial number of games won by Player1
         gamesP2       - initial number of games won by Player2
         isFinalSet    - whether this is the final set of the match
-        matchFormat   - describes the match format
+        matchFormat   - describes the match format (can be derived from gameScore or tiebreakScore if not provided)
         gameScore     - current game initial score (only if initially in the middle of a game)
         tiebreakScore - current tiebreak initial score (only if initially in the middle of a tiebreak)
 
         Raises:
         -------
-        ValueError - if any of the inputs are invalid
+        ValueError - if any of the inputs are invalid or if matchFormats are inconsistent
         """
         if not isinstance(gamesP1, int) or not isinstance(gamesP2, int):
             raise ValueError(f"Invalid games: gamesP1={gamesP1}, gamesP2={gamesP2}. Must be integers.")
         if not isinstance(isFinalSet, bool):
             raise ValueError(f"Invalid isFinalSet: {isFinalSet}. Must be a boolean.")
-        if not isinstance(matchFormat, MatchFormat):
-            raise ValueError(f"Invalid matchFormat: must be a MatchFormat instance.")
+        if matchFormat is not None and not isinstance(matchFormat, MatchFormat):
+            raise ValueError(f"Invalid matchFormat: must be None or a MatchFormat instance.")
         if gameScore is not None and not isinstance(gameScore, GameScore):
             raise ValueError(f"Invalid gameScore: must be None or a GameScore instance.")
         if gameScore is not None and gameScore.isFinal:
@@ -97,15 +97,26 @@ class SetScore:
         if tiebreakScore is not None and tiebreakScore.isFinal:
             raise ValueError(f"Invalid tiebreakScore: cannot be a final score (should be part of gamesP1/gamesP2).")
 
+        # Derive matchFormat from gameScore or tiebreakScore if not provided directly
+        if matchFormat is None:
+            if gameScore is not None:
+                matchFormat = gameScore._matchFormat
+            elif tiebreakScore is not None:
+                matchFormat = tiebreakScore._matchFormat
+            else:
+                matchFormat = MatchFormat()
+
+        # Validate that all provided matchFormats are consistent
+        if gameScore is not None and gameScore._matchFormat != matchFormat:
+            raise ValueError("gameScore.matchFormat must match matchFormat.")
+        if tiebreakScore is not None and tiebreakScore._matchFormat != matchFormat:
+            raise ValueError("tiebreakScore.matchFormat must match matchFormat.")
+
         self._matchFormat: MatchFormat = matchFormat
         self._isFinalSet : bool        = isFinalSet
 
         if not self.endsInTiebreak and tiebreakScore is not None:
             raise ValueError("tiebreakScore must be None when set ending is not tiebreak.")
-        if gameScore is not None and gameScore._matchFormat != matchFormat:
-            raise ValueError("gameScore.matchFormat must match matchFormat.")
-        if tiebreakScore is not None and tiebreakScore._matchFormat != matchFormat:
-            raise ValueError("tiebreakScore.matchFormat must match matchFormat.")
         if not SetScore._isValidScore(gamesP1, gamesP2, gameScore, tiebreakScore, matchFormat.setLength, self.endsInTiebreak):
             raise ValueError(f"Invalid initial score: {gamesP1}-{gamesP2}")
 

@@ -102,7 +102,7 @@ class TestSetScoreInit:
             SetScore(3, 2, False, DEFAULT_FORMAT, gameScore=game_score)
 
     def test_init_tiebreak_score_matchFormat_mismatch(self):
-        tb_score = TiebreakScore(2, 1, isSuper=False, matchFormat=CAP_FORMAT)
+        tb_score = TiebreakScore(2, 1, isSuper=False, matchFormat=NO_AD_FORMAT)
         with pytest.raises(ValueError):
             SetScore(6, 6, False, DEFAULT_FORMAT, tiebreakScore=tb_score)
 
@@ -118,6 +118,23 @@ class TestSetScoreInit:
         assert not score.isFinal
         assert score.currGameScore is not None
         assert score.tiebreakScore is None
+
+    def test_init_matchFormat_from_gameScore(self):
+        # matchFormat is derived from gameScore when not provided
+        game_score = GameScore(2, 1, NO_AD_FORMAT)
+        score = SetScore(3, 2, False, gameScore=game_score)
+        assert score._matchFormat == NO_AD_FORMAT
+
+    def test_init_matchFormat_from_tiebreakScore(self):
+        # matchFormat is derived from tiebreakScore when not provided
+        tb_score = TiebreakScore(2, 1, isSuper=False, matchFormat=NO_AD_FORMAT)
+        score = SetScore(6, 6, False, tiebreakScore=tb_score)
+        assert score._matchFormat == NO_AD_FORMAT
+
+    def test_init_default_matchFormat(self):
+        # default MatchFormat is used when no score objects provided
+        score = SetScore(3, 2, False)
+        assert score._matchFormat == MatchFormat()
 
 
 class TestSetScoreProperties:
