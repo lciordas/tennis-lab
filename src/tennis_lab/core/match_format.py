@@ -93,14 +93,15 @@ class MatchFormat:
 
     def __str__(self) -> str:
         """Human-readable description of the match format."""
+        matchTiebreakStr = "N/A" if self.bestOfSets == 1 else self.matchTiebreak
+        finalSetEndingStr = "N/A" if self.matchTiebreak or self.bestOfSets == 1 else self.finalSetEnding.value
         return (f"Match Format:\n"
                 f"  bestOfSets    : {self.bestOfSets}\n"
-                f"  matchTiebreak : {self.matchTiebreak}\n"
+                f"  matchTiebreak : {matchTiebreakStr}\n"
                 f"  setLength     : {self.setLength}\n"
                 f"  setEnding     : {self.setEnding.value}\n"
-                f"  finalSetEnding: {self.finalSetEnding.value}\n"
-                f"  noAdRule      : {self.noAdRule}\n"
-                f"  capPoints     : {self.capPoints}")
+                f"  finalSetEnding: {finalSetEndingStr}\n"
+                f"  noAdRule      : {self.noAdRule}")
 
     def __eq__(self, other) -> bool:
         """Check equality between two MatchFormat instances."""
