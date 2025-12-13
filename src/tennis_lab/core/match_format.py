@@ -3,7 +3,8 @@
 from enum import Enum
 from typing import Optional
 
-# Points needed to win a tiebreak or super-tiebreak
+# Points needed to win a game, tiebreak, or super-tiebreak
+POINTS_TO_WIN_GAME          =  4
 POINTS_TO_WIN_TIEBREAK      =  7
 POINTS_TO_WIN_SUPERTIEBREAK = 10
 

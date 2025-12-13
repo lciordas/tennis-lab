@@ -1,16 +1,11 @@
 """GameScore class representing the score in a tennis game."""
 
 from typing import Literal, Optional
-from tennis_lab.core.match_format import MatchFormat
+from tennis_lab.core.match_format import MatchFormat, POINTS_TO_WIN_GAME
 
 class GameScore:
     """
     Represents the running score of a tennis game.
-
-    Class Constants:
-    ----------------
-    NUM_POINTS_WIN: int
-        Number of points needed to win a game.
 
     Attributes:
     -----------
@@ -44,9 +39,6 @@ class GameScore:
     __str__() -> str
         Returns the traditional score format for display.
     """
-
-    # Number of points needed to win a game
-    NUM_POINTS_WIN = 4
 
     def __init__(self,
                  pointsP1   : int,
@@ -102,7 +94,7 @@ class GameScore:
         Deuce is defined as both players having the same number of points (more than two).
         For example 30-30 is not deuce.
         """
-        return (self._currPointsP1 == self._currPointsP2) and (self._currPointsP1 >= GameScore.NUM_POINTS_WIN - 1)
+        return (self._currPointsP1 == self._currPointsP2) and (self._currPointsP1 >= POINTS_TO_WIN_GAME - 1)
 
     @property
     def isFinal(self) -> bool:
@@ -116,9 +108,9 @@ class GameScore:
         """
         Returns which player has 'advantage', None if n/a.
         """
-        if (self._currPointsP1 - self._currPointsP2 == 1) and (self._currPointsP1 >= GameScore.NUM_POINTS_WIN):
+        if (self._currPointsP1 - self._currPointsP2 == 1) and (self._currPointsP1 >= POINTS_TO_WIN_GAME):
             return 1
-        if (self._currPointsP2 - self._currPointsP1 == 1) and (self._currPointsP2 >= GameScore.NUM_POINTS_WIN):
+        if (self._currPointsP2 - self._currPointsP1 == 1) and (self._currPointsP2 >= POINTS_TO_WIN_GAME):
             return 2
         return None
 
@@ -234,11 +226,11 @@ class GameScore:
         Tests whether a given player won the game, considering the current score.
         """
         if self._noAdRule:
-            P1_won = (self._currPointsP1 == GameScore.NUM_POINTS_WIN) and (self._currPointsP2 < GameScore.NUM_POINTS_WIN)
-            P2_won = (self._currPointsP2 == GameScore.NUM_POINTS_WIN) and (self._currPointsP1 < GameScore.NUM_POINTS_WIN)
+            P1_won = (self._currPointsP1 == POINTS_TO_WIN_GAME) and (self._currPointsP2 < POINTS_TO_WIN_GAME)
+            P2_won = (self._currPointsP2 == POINTS_TO_WIN_GAME) and (self._currPointsP1 < POINTS_TO_WIN_GAME)
         else:
-            P1_won = (self._currPointsP1 >= GameScore.NUM_POINTS_WIN) and (self._currPointsP1 - self._currPointsP2 > 1)
-            P2_won = (self._currPointsP2 >= GameScore.NUM_POINTS_WIN) and (self._currPointsP2 - self._currPointsP1 > 1)
+            P1_won = (self._currPointsP1 >= POINTS_TO_WIN_GAME) and (self._currPointsP1 - self._currPointsP2 > 1)
+            P2_won = (self._currPointsP2 >= POINTS_TO_WIN_GAME) and (self._currPointsP2 - self._currPointsP1 > 1)
 
         return P1_won if player == 1 else P2_won
 
@@ -250,13 +242,13 @@ class GameScore:
         problematic for some applications.
         """
         if self.isDeuce:
-            self._currPointsP1 = self._currPointsP2 = GameScore.NUM_POINTS_WIN - 1
+            self._currPointsP1 = self._currPointsP2 = POINTS_TO_WIN_GAME - 1
         elif self.playerWithAdvantage == 1:
-            self._currPointsP1 = GameScore.NUM_POINTS_WIN
-            self._currPointsP2 = GameScore.NUM_POINTS_WIN - 1
+            self._currPointsP1 = POINTS_TO_WIN_GAME
+            self._currPointsP2 = POINTS_TO_WIN_GAME - 1
         elif self.playerWithAdvantage == 2:
-            self._currPointsP1 = GameScore.NUM_POINTS_WIN - 1
-            self._currPointsP2 = GameScore.NUM_POINTS_WIN
+            self._currPointsP1 = POINTS_TO_WIN_GAME - 1
+            self._currPointsP2 = POINTS_TO_WIN_GAME
 
     @staticmethod
     def _isValidScore(score: tuple[int, int]) -> bool:
@@ -278,12 +270,12 @@ class GameScore:
             return False
 
         # score below or at 40-40
-        if p1 <= GameScore.NUM_POINTS_WIN - 1 and p2 <= GameScore.NUM_POINTS_WIN - 1:
+        if p1 <= POINTS_TO_WIN_GAME - 1 and p2 <= POINTS_TO_WIN_GAME - 1:
             return True
 
         # game over before reaching deuce
-        if (p1 == GameScore.NUM_POINTS_WIN and p2 <= GameScore.NUM_POINTS_WIN - 2) or \
-           (p2 == GameScore.NUM_POINTS_WIN and p1 <= GameScore.NUM_POINTS_WIN - 2):
+        if (p1 == POINTS_TO_WIN_GAME and p2 <= POINTS_TO_WIN_GAME - 2) or \
+           (p2 == POINTS_TO_WIN_GAME and p1 <= POINTS_TO_WIN_GAME - 2):
             return True
 
         # the score reached deuce
@@ -305,7 +297,7 @@ class GameScore:
         """
         score_map = {0: "0", 1: "15", 2: "30", 3: "40"}
         pFirst, pSecond = score
-        N = GameScore.NUM_POINTS_WIN
+        N = POINTS_TO_WIN_GAME
         if pFirst <= N - 1 and pSecond <= N - 1:
             return f"{score_map[pFirst]}-{score_map[pSecond]}"
         elif pFirst < N - 1 and pSecond == N:
