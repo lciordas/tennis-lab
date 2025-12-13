@@ -26,7 +26,8 @@ def pathProbability(path          : SetPath,
                     probWinPointP2: float) -> float:
     """
     Calculates the probability that a given score path occurs during a set.
-    Takes as input each player's probability of winning a point on their serve.
+    Takes as input the probability of each player winning the point when serving.
+    
 
     This function operates at game-level granularity: each step in the path represents
     a completed game, not individual points. Point-winning probabilities are converted

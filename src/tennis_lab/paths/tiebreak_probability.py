@@ -19,7 +19,7 @@ def pathProbability(path          : TiebreakPath,
                     probWinPointP2: float) -> float:
     """
     Calculates the probability that a given score path occurs during a tiebreak.
-    Takes as input the probability that each player wins the point when serving.
+    Takes as input the probability of each player winning the point when serving.
 
     Parameters:
     -----------
