@@ -4,9 +4,10 @@
 This script computes and caches the probability that *Player1* wins the tiebreak, given the
 probability that each player wins a point on serve. This is useful because this calculation
 is expensive. The script performs the calculation over a 2-D grid of point-winning probabilities,
-and the resulting tiebreak-winning probabilities are saved as an interpolated function that can
-be evaluated quickly. One such function is generated and cached for every possible starting score
-in the tiebreak, and for each player serving next.
+using joblib to parallelize the inner loop over P2 probabilities. The resulting tiebreak-winning
+probabilities are saved as an interpolated function that can be evaluated quickly. One such
+function is generated and cached for every possible starting score in the tiebreak, and for
+each player serving next.
 
 Each function is saved in a separate file. Example filenames:
  + prob_win_tbreak7_P1_32.pkl
@@ -32,6 +33,7 @@ below. It defaults to False (regular tiebreak).
 """
 from pathlib           import Path
 from scipy.interpolate import RectBivariateSpline
+from joblib            import Parallel, delayed
 import os, pickle, sys
 import numpy as np
 
@@ -53,10 +55,19 @@ DIRPATH.mkdir(exist_ok=True)
 IS_SUPER    = False
 pointsToWin = POINTS_TO_WIN_SUPERTIEBREAK if IS_SUPER else POINTS_TO_WIN_TIEBREAK
 
+# Number of parallel jobs for joblib (-1 = use all CPUs)
+N_JOBS = -1
+
 # Interpolation grid for the probabilities that P1 and P2 win when serving
 GRID_SZ = 50
 P1s = np.linspace(0.0001, 0.9999, GRID_SZ)
 P2s = np.linspace(0.0001, 0.9999, GRID_SZ)
+
+# =============================================
+
+def compute_row(p1, score, playerServing, P2s):
+    """Compute a row of tiebreak-winning probabilities for a fixed P1 probability."""
+    return [probabilityP1WinsTiebreak(score, playerServing, p1, p2) for p2 in P2s]
 
 # List all possible scores in the tiebreak.
 initScoresInter  = [(p1, p2) for p1 in range(pointsToWin) for p2 in range(pointsToWin)]  # the tiebreak is not over
@@ -78,14 +89,9 @@ for playerServing in (1, 2):
         score = TiebreakScore(pointsP1, pointsP2, IS_SUPER)
 
         if (pointsP1, pointsP2) in initScoresInter:
-            ProbWinTB = []
-            for i, p1 in enumerate(P1s):
-                row = []
-                for j, p2 in enumerate(P2s):
-                    cellNum = i * GRID_SZ + j + 1
-                    print(f"{prefix} {cellNum:4d}/{GRID_SZ**2}", end="", flush=True)
-                    row.append(probabilityP1WinsTiebreak(score, playerServing, p1, p2))
-                ProbWinTB.append(row)
+            ProbWinTB = Parallel(n_jobs=N_JOBS, verbose=100)(
+                delayed(compute_row)(p1, score, playerServing, P2s) for p1 in P1s
+            )
         elif (pointsP1, pointsP2) in initScoresP1Won:
             ProbWinTB = [[1.0 for p2 in P2s] for p1 in P1s]
         elif (pointsP1, pointsP2) in initScoresP1Lost:
